@@ -1,0 +1,29 @@
+<aura:component controller="LoanFormController" implements="force:hasRecordId,flexipage:availableForAllPageTypes" access="global">
+    <!-- Attributes -->
+    <aura:attribute name="loanType" type="String" />
+    <aura:attribute name="loanAmount" type="Decimal" />
+    <aura:attribute name="loanTerm" type="Integer" />
+    <aura:attribute name="interestRate" type="Decimal" />
+    <aura:attribute name="loanStatus" type="String" />
+    <aura:attribute name="accountId" type="String" />
+    <aura:attribute name="errorMessage" type="String" default="" /> <!-- Error Message Attribute -->
+
+    <!-- Loan Form -->
+    <lightning:card title="Loan Form" iconName="standard:opportunity">
+        <div class="slds-p-horizontal--small">
+            <!-- Error Message Display -->
+            <aura:if isTrue="{!v.errorMessage}">
+                <div class="slds-text-color_error slds-m-bottom_small">{!v.errorMessage}</div>
+            </aura:if>
+
+            <lightning:input label="Loan Type" value="{!v.loanType}" placeholder="Enter Loan Type" required="true" />
+            <lightning:input label="Loan Amount" value="{!v.loanAmount}" placeholder="Enter Loan Amount" type="number" required="true" />
+            <lightning:input label="Loan Term" value="{!v.loanTerm}" placeholder="Enter Loan Term" type="number" required="true" />
+            <lightning:input label="Interest Rate" value="{!v.interestRate}" placeholder="Enter Interest Rate" type="number" required="true" />
+            <lightning:input label="Loan Status" value="{!v.loanStatus}" placeholder="Enter Loan Status" required="true" />
+        </div>
+
+        <!-- Save Button -->
+        <lightning:button label="Save Loan" variant="brand" onclick="{!c.saveLoan}" class="slds-m-top--small" />
+    </lightning:card>
+</aura:component>
