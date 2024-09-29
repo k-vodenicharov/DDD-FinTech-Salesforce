@@ -17,7 +17,6 @@
     ○ Payment_Amount__c - Currency
     ○ Loan__c - Master-detail relationship with the loan object
 
-# The Lightning Component could be find in each Account record in App `FinTech`.
 # The component holds five fields and a save button.
     ○ Loan Type
     ○ Loan Amount
