@@ -4,6 +4,8 @@
         <members>LoanController</members>
         <members>LoanFormController</members>
         <members>ResponseWrapper</members>
+        <members>LoanQueueable</members>
+        <members>PaymentPlanQueueable</members>
         <name>ApexClass</name>
     </types>
 
