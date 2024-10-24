@@ -20,7 +20,6 @@ public class PaymentPlanQueueable implements Queueable {
                 return;
             }
 
-            //Creating new instance with existing Loan.
             Loan__c loan = loans[0];
 
             // Calculate payment plan details
