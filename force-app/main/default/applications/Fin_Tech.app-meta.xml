@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <brand>
+        <headerColor>#0070D2</headerColor>
+        <logo>shutterstock_495741667</logo>
+        <logoVersion>1</logoVersion>
+        <shouldOverrideOrgTheme>false</shouldOverrideOrgTheme>
+    </brand>
+    <formFactors>Small</formFactors>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
+    <label>Fin Tech</label>
+    <navType>Standard</navType>
+    <tabs>standard-Account</tabs>
+    <tabs>standard-Contact</tabs>
+    <tabs>Loan__c</tabs>
+    <tabs>Payment_Plan__c</tabs>
+    <tabs>Transaction__c</tabs>
+    <tabs>Investment__c</tabs>
+    <tabs>Investment_Portfolio__c</tabs>
+    <tabs>KYC_Verification__c</tabs>
+    <tabs>Financial_Product__c</tabs>
+    <tabs>Regulatory_Report__c</tabs>
+    <tabs>standard-Opportunity</tabs>
+    <tabs>standard-Contract</tabs>
+    <tabs>standard-Asset</tabs>
+    <tabs>standard-report</tabs>
+    <tabs>standard-Dashboard</tabs>
+    <uiType>Lightning</uiType>
+    <utilityBar>Fin_Tech_UtilityBar</utilityBar>
+</CustomApplication>
