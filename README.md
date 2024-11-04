@@ -49,3 +49,6 @@
 #If you want to comment on an error or give an idea, I'm open to comments and critical thinking on the current repository.
 
 #You can contact me via LinkedIn.
+
+![chatuml-diagram](https://github.com/user-attachments/assets/a622f19b-b968-419a-8efa-d1bfe2512384)
+
