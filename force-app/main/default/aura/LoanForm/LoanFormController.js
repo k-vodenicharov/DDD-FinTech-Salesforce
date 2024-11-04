@@ -59,14 +59,15 @@
                         }
 
                     } else {
-                        console.error('Error: ' + responseValue.errorMessage);
+                        // Display the error message from the server
+                        component.set("v.errorMessage", responseValue.errorMessage);
                     }
                 } else if (state === "ERROR") {
                     var errors = response.getError();
                     if (errors && errors[0] && errors[0].message) {
-                        console.error('Error: ' + errors[0].message);
+                        component.set("v.errorMessage", errors[0].message);
                     } else {
-                        console.error('Unknown error occurred.');
+                        component.set("v.errorMessage", "An unknown error occurred.");
                     }
                 }
             });
@@ -75,7 +76,7 @@
             $A.enqueueAction(action);
 
         } catch (error) {
-            console.error('Exception occurred: ', error);
+            component.set("v.errorMessage", "An error occurred: " + error.message);
         }
     }
 })
