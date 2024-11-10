@@ -3,10 +3,12 @@
     <types>
         <name>ApexClass</name>
         <members>LoanController</members>
-        <members>LoanFormController</members>
-        <members>ResponseWrapper</members>
+        <members>LoanService</members>
+        <members>LoanDomain</members>
+        <members>LoanRepository</members>
         <members>LoanQueueable</members>
         <members>PaymentPlanQueueable</members>
+        <members>ResponseWrapper</members>
     </types>
 
     <types>
@@ -19,13 +21,18 @@
         <members>Contact</members>
         <members>Account</members>
         <members>Loan__c</members>
-        <members>Payment_Plan__c </members>
-        <members>Transaction__c </members>
-        <members>Investment__c </members>
-        <members>Investment_Portfolio__c </members>
-        <members>KYC_Verification__c </members>
-        <members>Financial_Product__c </members>
-        <members>Regulatory_Report__c </members>
+        <members>Payment_Plan__c</members>
+        <members>Transaction__c</members>
+        <members>Investment__c</members>
+        <members>Investment_Portfolio__c</members>
+        <members>KYC_Verification__c</members>
+        <members>Financial_Product__c</members>
+        <members>Regulatory_Report__c</members>
+    </types>
+
+    <types>
+        <name>Flow</name>
+        <members>Invocable_LoanTermAdjustment</members>
     </types>
 
     <types>

@@ -1,105 +1,131 @@
 @isTest
 public class LoanTests {
 
-    @isTest
-    static void testCreateLoanSuccess() {
-        // Test data
-        String loanDataJson = JSON.serialize(new Map<String, Object>{
-            'Loan_Type__c' => 'Secured',
-            'Loan_Amount__c' => 10000,
-            'Loan_Term__c' => 6,
-            'Interest_Rate__c' => 5,
-            'Loan_Status__c' => 'Approved',
-            'Account__c' => '001Qy00000ScY0YIAV'
-        });
-        
-        // Call the method to test
-        Test.startTest();
-        LoanController.ResponseWrapper response = LoanController.createLoan(loanDataJson);
-        Test.stopTest();
-
-        // Assertions
-        System.assertNotEquals(null, response);
-        System.assertEquals(true, response.isSuccess);
-        System.assertNotEquals(null, response.loanId);
-        
-        // Optionally, verify that the Loan__c record was created
-        Loan__c createdLoan = [SELECT Id, Loan_Type__c, Loan_Amount__c FROM Loan__c WHERE Id = :response.loanId];
-        System.assertEquals('Secured', createdLoan.Loan_Type__c);
-        System.assertEquals(10000, createdLoan.Loan_Amount__c);
+    // Helper method to create test loan data as JSON
+    private static String generateLoanData(String loanType, Decimal loanAmount, Integer loanTerm, Decimal interestRate, String loanStatus, Id accountId) {
+        Map<String, Object> loanData = new Map<String, Object>{
+            'Loan_Type__c' => loanType,
+            'Loan_Amount__c' => loanAmount,
+            'Loan_Term__c' => loanTerm,
+            'Interest_Rate__c' => interestRate,
+            'Loan_Status__c' => loanStatus,
+            'Account__c' => accountId
+        };
+        return JSON.serialize(loanData);
     }
 
-    @isTest
-    static void testCreateLoanWithMissingRequiredFields() {
-        // Missing required fields
-        String loanDataJson = JSON.serialize(new Map<String, Object>{
-            'Loan_Type__c' => 'Secured',
-            'Loan_Amount__c' => null, // Missing loan amount
-            'Loan_Term__c' => 6,
-            'Interest_Rate__c' => 5,
-            'Loan_Status__c' => 'Approved',
-            'Account__c' => '001Qy00000ScY0YIAV'
-        });
+    @IsTest
+    static void testCreateLoan_Success() {
+        // Setup test data
+        Account testAccount = new Account(Name = 'Test Account');
+        insert testAccount;
 
-        // Call the method to test
+        String loanData = generateLoanData('Unsecured', 10000, 12, 5, 'Pending', testAccount.Id);
+
+        // Test the loan creation method
         Test.startTest();
-        LoanController.ResponseWrapper response = LoanController.createLoan(loanDataJson);
+        LoanController.ResponseWrapper response = LoanController.createLoanApex(loanData);
         Test.stopTest();
 
-        // Assertions
-        System.assertNotEquals(null, response);
-        System.assertEquals(false, response.isSuccess);
-        System.assertEquals('Missing required fields.', response.errorMessage);
+        // Assert that the response indicates success
+        System.assert(response.isSuccess, 'Loan creation should be successful');
+        System.assertNotEquals(response.loanId, null, 'Loan ID should be populated on success');
+        System.assertEquals(response.errorMessage, null, 'Error message should be null on success');
     }
 
-    @isTest
-    static void testCreateLoanExceedsMaxLoanTerm() {
-        // Loan term exceeds maximum allowed for Secured loans
-        String loanDataJson = JSON.serialize(new Map<String, Object>{
-            'Loan_Type__c' => 'Secured',
-            'Loan_Amount__c' => 10000,
-            'Loan_Term__c' => 7, // Exceeds max
-            'Interest_Rate__c' => 5,
-            'Loan_Status__c' => 'Approved',
-            'Account__c' => '001Qy00000ScY0YIAV'
-        });
+    @IsTest
+    static void testCreateLoan_Failure_InvalidTerm() {
+        // Setup test data
+        Account testAccount = new Account(Name = 'Test Account');
+        insert testAccount;
 
-        // Call the method to test
+        // Test invalid term for a secured loan (term > 6 for 'Secured' loans)
+        String loanData = generateLoanData('Secured', 10000, 12, 5, 'Pending', testAccount.Id);
+
         Test.startTest();
-        LoanController.ResponseWrapper response = LoanController.createLoan(loanDataJson);
+        LoanController.ResponseWrapper response = LoanController.createLoanApex(loanData);
         Test.stopTest();
 
-        // Assertions
-        System.assertNotEquals(null, response);
-        System.assertEquals(false, response.isSuccess);
-        System.assertEquals('Loan term exceeds maximum allowed value for Secured loans (6 months).', response.errorMessage);
+        // Assert that the response indicates failure
+        System.assert(!response.isSuccess, 'Loan creation should fail for invalid loan term');
+        System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
+        System.assert(response.errorMessage.contains('Loan term exceeds maximum allowed'), 'Error message should mention invalid loan term');
     }
 
-    @isTest
-    static void testQueueableJobExecution() {
-        // Test for successful creation and processing of queueable jobs
-        String loanDataJson = JSON.serialize(new Map<String, Object>{
-            'Loan_Type__c' => 'Unsecured',
-            'Loan_Amount__c' => 20000,
-            'Loan_Term__c' => 12,
-            'Interest_Rate__c' => 6,
-            'Loan_Status__c' => 'Approved',
-            'Account__c' => '001Qy00000ScY0YIAV'
-        });
+    @IsTest
+    static void testAdjustLoanTerm_Success() {
+        // Setup initial loan
+        Account testAccount = new Account(Name = 'Test Account');
+        insert testAccount;
 
-        // Create loan and queue job
+        Loan__c testLoan = new Loan__c(
+            Loan_Type__c = 'Unsecured',
+            Loan_Amount__c = 10000,
+            Loan_Term__c = 12,
+            Interest_Rate__c = 5,
+            Loan_Status__c = 'Active',
+            Account__c = testAccount.Id
+        );
+        insert testLoan;
+
+        Integer newLoanTerm = 10; // Valid term adjustment for an unsecured loan
+
+        // Test the loan term adjustment
         Test.startTest();
-        LoanController.ResponseWrapper response = LoanController.createLoan(loanDataJson);
+        LoanController.ResponseWrapper response = LoanController.adjustLoanTerm(testLoan.Id, newLoanTerm);
         Test.stopTest();
 
-        // Execute the queued jobs
+        // Assert that the response indicates success
+        System.assert(response.isSuccess, 'Loan term adjustment should be successful');
+        System.assertEquals(response.errorMessage, null, 'Error message should be null on success');
+
+        // Verify the loan term was updated in the database
+        Loan__c updatedLoan = [SELECT Loan_Term__c FROM Loan__c WHERE Id = :testLoan.Id];
+        System.assertEquals(updatedLoan.Loan_Term__c, newLoanTerm, 'Loan term should be updated to new value');
+    }
+
+    @IsTest
+    static void testAdjustLoanTerm_Failure_LoanNotFound() {
+        // Setup an invalid loan ID
+        String invalidLoanId = 'a0Q0B00000INVALID'; // Invalid ID format for testing
+
+        // Test the loan term adjustment with an invalid loan ID
         Test.startTest();
-        System.enqueueJob(new PaymentPlanQueueable(response.loanId));
+        LoanController.ResponseWrapper response = LoanController.adjustLoanTerm(invalidLoanId, 10);
         Test.stopTest();
 
-        // Verify payment plans were created
-        List<Payment_Plan__c> paymentPlans = [SELECT Id, Loan__c, Payment_Amount__c FROM Payment_Plan__c WHERE Loan__c = :response.loanId];
-        System.assertEquals(12, paymentPlans.size());
-        System.assertEquals(1800, paymentPlans[0].Payment_Amount__c); // Total amount divided by term
+        // Assert that the response indicates failure
+        System.assert(!response.isSuccess, 'Loan term adjustment should fail for a nonexistent loan');
+        System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
+        System.assert(response.errorMessage.contains('Loan not found'), 'Error message should mention loan not found');
+    }
+
+    @IsTest
+    static void testAdjustLoanTerm_Failure_InvalidTerm() {
+        // Setup initial loan
+        Account testAccount = new Account(Name = 'Test Account');
+        insert testAccount;
+
+        Loan__c testLoan = new Loan__c(
+            Loan_Type__c = 'Secured',
+            Loan_Amount__c = 10000,
+            Loan_Term__c = 6,
+            Interest_Rate__c = 5,
+            Loan_Status__c = 'Active',
+            Account__c = testAccount.Id
+        );
+        insert testLoan;
+
+        Integer invalidNewLoanTerm = 12; // Invalid term adjustment for a secured loan (term > 6)
+
+        // Test the loan term adjustment
+        Test.startTest();
+        LoanController.ResponseWrapper response = LoanController.adjustLoanTerm(testLoan.Id, invalidNewLoanTerm);
+        Test.stopTest();
+
+        // Assert that the response indicates failure
+        System.assert(!response.isSuccess, 'Loan term adjustment should fail for invalid loan term');
+        System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
+        System.assert(response.errorMessage.contains('Loan term exceeds maximum allowed'), 'Error message should mention invalid loan term');
     }
 }

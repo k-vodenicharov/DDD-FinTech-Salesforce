@@ -1,4 +1,4 @@
-<aura:component controller="LoanFormController" implements="force:hasRecordId,flexipage:availableForAllPageTypes" access="global">
+<aura:component controller="LoanController" implements="force:hasRecordId,flexipage:availableForAllPageTypes" access="global">
     <!-- Attributes -->
     <aura:attribute name="loanType" type="String" />
     <aura:attribute name="loanAmount" type="Decimal" />

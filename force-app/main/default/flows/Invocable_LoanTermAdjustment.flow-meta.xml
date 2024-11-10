@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <name>Adjust_Payment_Plans</name>
+        <label>Adjust Payment Plans</label>
+        <locationX>176</locationX>
+        <locationY>323</locationY>
+        <actionName>LoanDomain</actionName>
+        <actionType>apex</actionType>
+        <faultConnector>
+            <targetReference>Unsecured_Decision</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>loanIds</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>LoanDomain</nameSegment>
+        <offset>0</offset>
+        <versionSegment>1</versionSegment>
+    </actionCalls>
+    <apiVersion>62.0</apiVersion>
+    <customErrors>
+        <description>Handles error when the loan term exceeds the maximum allowed for secured loans.</description>
+        <name>Loan_Term_Exceed_Limit</name>
+        <label>Loan Term Exceed Limit</label>
+        <locationX>528</locationX>
+        <locationY>623</locationY>
+        <customErrorMessages>
+            <errorMessage>Loan term exceeds maximum allowed value for {!$Record.Loan_Type__c} loans (6 months).</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <decisions>
+        <name>Unsecured_Decision</name>
+        <label>Unsecured Decision</label>
+        <locationX>528</locationX>
+        <locationY>431</locationY>
+        <defaultConnector>
+            <targetReference>Loan_Term_Exceed_Limit</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>unsecuredDecisionChange</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Loan_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Secured</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Loan_Term_Exceed_Limit</targetReference>
+            </connector>
+            <label>unsecuredDecisionChange</label>
+        </rules>
+    </decisions>
+    <environments>Default</environments>
+    <interviewLabel>Invocable LoanTermAdjustment {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Invocable LoanTermAdjustment</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Adjust_Payment_Plans</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Loan_Term__c</field>
+            <operator>IsChanged</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <object>Loan__c</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>
