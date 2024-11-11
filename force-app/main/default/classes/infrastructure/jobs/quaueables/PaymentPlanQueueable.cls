@@ -25,11 +25,14 @@ public class PaymentPlanQueueable implements Queueable {
         List<Payment_Plan__c> paymentPlans = new List<Payment_Plan__c>();
         Date firstPaymentDeadline = loan.CreatedDate.date().toStartOfMonth().addMonths(1);
 
+        String paymentStatus = 'Pending';
+
         for (Integer i = 0; i < loanTerm; i++) {
             Payment_Plan__c payment = new Payment_Plan__c(
                 Loan__c = loanId,
                 Payment_Deadline__c = firstPaymentDeadline.addMonths(i),
-                Payment_Amount__c = paymentAmount
+                Payment_Amount__c = paymentAmount,
+                Payment_Status__c = paymentStatus
             );
             paymentPlans.add(payment);
         }

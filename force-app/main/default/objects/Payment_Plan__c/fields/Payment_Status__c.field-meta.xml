@@ -20,9 +20,9 @@
                 <label>Approved</label>
             </value>
             <value>
-                <fullName>Reject</fullName>
+                <fullName>Rejected</fullName>
                 <default>false</default>
-                <label>Reject</label>
+                <label>Rejected</label>
             </value>
             <value>
                 <fullName>Under Review</fullName>

@@ -16,7 +16,6 @@ public class LoanService {
      * @param loanData JSON-formatted string containing loan details.
      * @return ResponseWrapper with success status, loan ID (if created), or error message.
      */
-
     public LoanController.ResponseWrapper createLoan(String loanData) {
         LoanController.ResponseWrapper response = new LoanController.ResponseWrapper();
         
