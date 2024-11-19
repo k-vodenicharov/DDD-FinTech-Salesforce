@@ -26,15 +26,20 @@
 
     <types>
         <name>ApexClass</name>
-        <members>LoanController</members>
+        <members>EmailService</members>
         <members>LoanService</members>
         <members>LoanDomain</members>
-        <members>LoanRepository</members>
         <members>LoanQueueable</members>
-        <members>PaymentPlanQueueable</members>
+        <members>LoanRepository</members>
+        <members>LoanController</members>
         <members>LoanTriggerHandler</members>
+        <members>LoanPaymentReminderJob</members>
+        <members>PaymentPlanDomain</members>
+        <members>PaymentPlanQueueable</members>
         <members>PaymentPlanTriggerHandler</members>
+        <members>TriggerHandler</members>
         <members>ResponseWrapper</members>
+        <members>UpdateLoanTermRequest</members>
     </types>
 
     <types>
