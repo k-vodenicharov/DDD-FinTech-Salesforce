@@ -11,9 +11,37 @@
     </types>
 
     <types>
+        <name>CustomTab</name>
+        <members>*</members>
+    </types>
+
+    <types>
+        <name>FlexiPage</name>
+        <members>Account_Record_Page</members>
+    </types>
+
+    <types>
+        <name>CompactLayout</name>
+        <members>*</members>
+    </types>
+
+    <types>
+        <name>ListView</name>
+        <members>*</members>
+    </types>
+
+    <types>
+        <name>QuickAction</name>
+        <members>*</members>
+    </types>
+
+    <types>
+        <name>PermissionSet</name>
+        <members>*</members>
+    </types>
+
+    <types>
         <name>CustomObject</name>
-        <members>Contact</members>
-        <members>Account</members>
         <members>Loan__c</members>
         <members>Payment_Plan__c</members>
         <members>Transaction__c</members>

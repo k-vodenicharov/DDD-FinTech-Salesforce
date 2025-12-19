@@ -5,15 +5,19 @@ public class LoanDomain {
      * @param loanData Map containing fields like Loan_Type__c, Loan_Amount__c, Loan_Term__c, etc.
      * @return The Loan__c instance with populated fields.
      */
-    public Loan__c createLoan(Map<String, Object> loanData) {
+public Loan__c createLoan(Map<String, Object> loanData) {
         // Initialize a new Loan__c record and populate its fields from loanData map
         Loan__c newLoan = new Loan__c();
         newLoan.Loan_Type__c = (String) loanData.get('Loan_Type__c');
         newLoan.Loan_Amount__c = (Decimal) loanData.get('Loan_Amount__c');
         newLoan.Loan_Term__c = (Integer) loanData.get('Loan_Term__c');
         newLoan.Interest_Rate__c = (Decimal) loanData.get('Interest_Rate__c');
-        newLoan.Loan_Status__c = (String) loanData.get('Loan_Status__c');
+        // Set Loan Status to "Pending" automatically, regardless of user input
+        newLoan.Loan_Status__c = 'Pending';
         newLoan.Account__c = (Id) loanData.get('Account__c');
+        
+        // Set a meaningful name for the loan record
+        newLoan.Name = 'Loan ' + newLoan.Loan_Type__c + ' - ' + newLoan.Loan_Amount__c;
         
         // Calculate interest and Principal_Plus_Interest__c
         Decimal interest = newLoan.Loan_Amount__c * newLoan.Interest_Rate__c / 100;
@@ -42,39 +46,10 @@ public class LoanDomain {
         for (Id loanId : loanIds) {
             Loan__c loan = [SELECT Id, Loan_Term__c, Principal_Plus_Interest__c, CreatedDate, Loan_Type__c, Loan_Status__c FROM Loan__c WHERE Id = :loanId LIMIT 1];
             
-            // Check if Loan Type changed from Secured to Unsecured
-            String oldLoanType = loan.Loan_Type__c;
-            String newLoanType = loan.Loan_Type__c;
-            
             // Check if the Loan Term is more than 6 months
             Integer maxLoanTerm = 6;
             Integer newTerm = Integer.valueOf(loan.Loan_Term__c);
             
-            // If Loan Type is changed from 'Secured' to 'Unsecured' and Loan Term is more than 6 months
-            if (oldLoanType == 'Secured' && newLoanType == 'Unsecured' && newTerm > maxLoanTerm) {
-                // Create Payment Plans with Payment Status as Pending
-                List<Payment_Plan__c> newPlans = new List<Payment_Plan__c>();
-                Decimal newPaymentAmount = loan.Principal_Plus_Interest__c / newTerm;
-                Date firstPaymentDeadline = loan.CreatedDate.date().toStartOfMonth().addMonths(1);
-                
-                for (Integer i = 0; i < newTerm; i++) {
-                    Payment_Plan__c newPlan = new Payment_Plan__c(
-                        Loan__c = loanId,
-                        Payment_Amount__c = newPaymentAmount,
-                        Payment_Deadline__c = firstPaymentDeadline.addMonths(i),
-                        Payment_Status__c = 'Pending'  // Set Payment Status to Pending
-                    );
-                    newPlans.add(newPlan);
-                }
-                
-                // Insert new payment plans
-                insert newPlans;
-                
-                // Set Loan Status to Under Review
-                loan.Loan_Status__c = 'Under Review';
-                update loan; // Update loan with new status
-            }
-
             // Retrieve existing payment plans and adjust if needed
             List<Payment_Plan__c> existingPlans = [SELECT Id, Payment_Amount__c, Payment_Deadline__c FROM Payment_Plan__c WHERE Loan__c = :loanId];
             
@@ -104,6 +79,8 @@ public class LoanDomain {
                         Payment_Deadline__c = firstPaymentDeadline.addMonths(i),
                         Payment_Status__c = 'Pending'  // Set Payment Status to Pending
                     );
+                // Set a meaningful name for the payment plan using counter-based naming
+                newPlan.Name = 'Payment ' + (i+1) + ' of ' + loan.Loan_Term__c + ' for ' + loan.Loan_Type__c;
                     newPlans.add(newPlan);
                 }
                 insert newPlans;
@@ -121,8 +98,8 @@ public class LoanDomain {
                 upsert existingPlans;
             } catch (DmlException e) {
                 loan.Loan_Status__c = 'Under Review';
-                update loan; // Set the loan status to "Under Review" if there is a failure
-                continue; // Skip to the next loan if this one fails
+                update loan; 
+                continue; 
             }
 
             // Ensure total payment matches Principal_Plus_Interest__c
@@ -148,18 +125,20 @@ public class LoanDomain {
         for (Loan__c loan : loansToProcess) {
             Integer loanTerm = (Integer) loan.Loan_Term__c;
             Decimal paymentAmount = loan.Principal_Plus_Interest__c / loanTerm;
-            Date firstPaymentDeadline = loan.CreatedDate.date().addMonths(1);
+            Date firstPaymentDeadline = loan.CreatedDate.date().toStartOfMonth().addMonths(1);
 
             for (Integer i = 0; i < loanTerm; i++) {
-                newPaymentPlans.add(new Payment_Plan__c(
+                Payment_Plan__c newPlan = new Payment_Plan__c(
                     Loan__c = loan.Id,
                     Payment_Amount__c = paymentAmount,
                     Payment_Deadline__c = firstPaymentDeadline.addMonths(i),
                     Payment_Status__c = 'Pending'
-                ));
+                );
+                // Set a meaningful name for the payment plan using counter-based naming
+                newPlan.Name = 'Payment ' + (i+1) + ' of ' + loan.Loan_Term__c + ' for ' + loan.Loan_Type__c;
+                newPaymentPlans.add(newPlan);
             }
-
-            // Update Loan Status to "Under Review"
+            
             loan.Loan_Status__c = 'Under Review';
         }
 
@@ -172,4 +151,5 @@ public class LoanDomain {
 
     // Custom exception to handle loan term validation errors
     public class LoanTermExceededException extends Exception {}
+    
 }

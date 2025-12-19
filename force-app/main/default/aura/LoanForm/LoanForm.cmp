@@ -1,6 +1,5 @@
 <aura:component controller="LoanController" implements="force:hasRecordId,flexipage:availableForAllPageTypes" access="global">
-    <!-- Attributes -->
-    <aura:attribute name="loanType" type="String" />
+    <aura:attribute name="loanType" type="String" default="Secured" />
     <aura:attribute name="loanAmount" type="Decimal" />
     <aura:attribute name="loanTerm" type="Integer" />
     <aura:attribute name="interestRate" type="Decimal" />
@@ -15,11 +14,14 @@
                 <div class="slds-text-color_error slds-m-bottom_small">{!v.errorMessage}</div>
             </aura:if>
 
-            <lightning:input label="Loan Type" value="{!v.loanType}" placeholder="Enter Loan Type" required="true" />
+            <lightning:select label="Loan Type" value="{!v.loanType}" required="true">
+                <option value="">--Select Loan Type--</option>
+                <option value="Secured">Secured</option>
+                <option value="Unsecured">Unsecured</option>
+            </lightning:select>
             <lightning:input label="Loan Amount" value="{!v.loanAmount}" placeholder="Enter Loan Amount" type="number" required="true" />
             <lightning:input label="Loan Term" value="{!v.loanTerm}" placeholder="Enter Loan Term" type="number" required="true" />
             <lightning:input label="Interest Rate" value="{!v.interestRate}" placeholder="Enter Interest Rate" type="number" required="true" />
-            <lightning:input label="Loan Status" value="{!v.loanStatus}" placeholder="Enter Loan Status" required="true" />
         </div>
 
         <!-- Save Button -->

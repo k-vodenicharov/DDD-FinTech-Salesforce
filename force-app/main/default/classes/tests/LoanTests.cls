@@ -14,6 +14,11 @@ public class LoanTests {
         return JSON.serialize(loanData);
     }
 
+    // Helper method to parse JSON response into a map for assertions
+    private static Map<String, Object> parseJsonResponse(String jsonResponse) {
+        return (Map<String, Object>) JSON.deserializeUntyped(jsonResponse);
+    }
+
     @IsTest
     static void testCreateLoan_Success() {
         // Setup test data

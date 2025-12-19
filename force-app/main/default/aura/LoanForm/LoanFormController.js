@@ -6,7 +6,6 @@
             var loanAmount = parseFloat(component.get("v.loanAmount"));
             var loanTerm = parseInt(component.get("v.loanTerm"), 10);
             var interestRate = parseFloat(component.get("v.interestRate"));
-            var loanStatus = component.get("v.loanStatus");
             var accountId = component.get("v.recordId");
 
             // Validate loan term based on loan type
@@ -34,7 +33,6 @@
                 Loan_Amount__c: loanAmount,
                 Loan_Term__c: loanTerm,
                 Interest_Rate__c: interestRate,
-                Loan_Status__c: loanStatus,
                 Account__c: accountId
             };
 
@@ -50,7 +48,19 @@
                 if (state === "SUCCESS") {
                     var responseValue = response.getReturnValue();
                     if (responseValue.isSuccess) {
-                        console.log('Loan created successfully with ID: ' + responseValue.loanId);
+                        // Show success message with loan ID
+                        var toastEvent = $A.get("e.force:showToast");
+                        if (toastEvent) {
+                            toastEvent.setParams({
+                                "title": "Success!",
+                                "message": "Loan created successfully with ID: " + responseValue.loanId,
+                                "type": "success"
+                            });
+                            toastEvent.fire();
+                        } else {
+                            // Fallback for environments without toast support
+                            alert("Loan created successfully with ID: " + responseValue.loanId);
+                        }
 
                         // Refresh the Account record view to reflect the new loan in the related list
                         var refreshEvent = $A.get("e.force:refreshView");

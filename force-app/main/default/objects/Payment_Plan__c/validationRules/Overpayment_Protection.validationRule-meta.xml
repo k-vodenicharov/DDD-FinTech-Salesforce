@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Overpayment_Protection</fullName>
+    <active>true</active>
+    <description>Prevents overpayments by ensuring Payment_Amount__c does not exceed the principal plus interest when BYPASS__c is not checked</description>
+    <errorConditionFormula>(NOT(BYPASS__c) &amp;&amp; Payment_Amount__c &gt; (Loan__r.Principal_Plus_Interest__c))</errorConditionFormula>
+    <errorMessage>Payment amount cannot exceed the principal plus interest amount unless BYPASS__c is checked.</errorMessage>
+</ValidationRule>

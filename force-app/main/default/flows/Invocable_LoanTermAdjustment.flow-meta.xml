@@ -19,7 +19,6 @@
         </inputParameters>
         <nameSegment>LoanDomain</nameSegment>
         <offset>0</offset>
-        <versionSegment>1</versionSegment>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
     <customErrors>

@@ -15,24 +15,37 @@
                 <label>Pending</label>
             </value>
             <value>
-                <fullName>Approved</fullName>
-                <default>false</default>
-                <label>Approved</label>
-            </value>
-            <value>
-                <fullName>Rejected</fullName>
-                <default>false</default>
-                <label>Rejected</label>
-            </value>
-            <value>
                 <fullName>Under Review</fullName>
                 <default>false</default>
                 <label>Under Review</label>
             </value>
             <value>
+                <fullName>Failed</fullName>
+                <default>false</default>
+                <label>Failed</label>
+            </value>
+            <value>
+                <fullName>Closed</fullName>
+                <default>false</default>
+                <label>Closed</label>
+            </value>
+            <value>
+                <fullName>Approved</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Approved</label>
+            </value>
+            <value>
                 <fullName>Disbursed</fullName>
                 <default>false</default>
+                <isActive>false</isActive>
                 <label>Disbursed</label>
+            </value>
+            <value>
+                <fullName>Rejected</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Rejected</label>
             </value>
         </valueSetDefinition>
     </valueSet>

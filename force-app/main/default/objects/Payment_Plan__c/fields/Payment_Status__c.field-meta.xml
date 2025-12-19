@@ -15,18 +15,31 @@
                 <label>Pending</label>
             </value>
             <value>
+                <fullName>Completed</fullName>
+                <default>false</default>
+                <label>Completed</label>
+            </value>
+            <value>
+                <fullName>Failed</fullName>
+                <default>false</default>
+                <label>Failed</label>
+            </value>
+            <value>
                 <fullName>Approved</fullName>
                 <default>false</default>
+                <isActive>false</isActive>
                 <label>Approved</label>
             </value>
             <value>
                 <fullName>Rejected</fullName>
                 <default>false</default>
+                <isActive>false</isActive>
                 <label>Rejected</label>
             </value>
             <value>
                 <fullName>Under Review</fullName>
                 <default>false</default>
+                <isActive>false</isActive>
                 <label>Under Review</label>
             </value>
         </valueSetDefinition>
