@@ -45,6 +45,15 @@ This repository contains a Salesforce implementation for managing loan applicati
 - Validation rule prevents overpayments unless BYPASS__c is checked
 - Invocable method for manual adjustments
 
+### 8. Loan Prepayment Functionality
+- Reusable Lightning component and Apex logic that accepts a Loan recordId as input
+- Calculates remaining balance (sum of non-Completed Payment_Plan__c records)
+- Marks all pending Payment_Plan__c records as Completed
+- Updates Loan__c status to Closed
+- Displays a success toast with remaining balance information
+- Supports being triggered from both a Loan record page action and a row-level action in the Account → Loans related list
+- Not embedded in the loan creation form
+
 ## Data Model
 
 ### Loan__c Object
@@ -218,6 +227,20 @@ When a loan is created:
      `job.execute(null);`
      
 8. Check your email inbox for the missed payment reminder emails sent to the borrower
+
+### `Test 9:` Loan Prepayment Functionality
+1. Create a new loan with Loan Term = 3 months
+2. Navigate to the loan record
+3. Verify that 3 payment plan records are created with "Pending" status
+4. Click the "Actions" dropdown in the loan record header
+5. Select "Prepay Loan" from the menu `If the Quick Action button is missing, just added via LRP or Page Layout`
+6. Confirm the prepayment in the dialog that appears
+7. Verify that:
+   - All 3 payment plans are marked as "Completed"
+   - The loan status is updated to "Closed"
+   - A success toast notification appears
+   - The remaining balance is displayed in the toast message
+8. Verify that the loan can no longer be modified through normal processes since it's closed
 
 
 ## Future Enhancements

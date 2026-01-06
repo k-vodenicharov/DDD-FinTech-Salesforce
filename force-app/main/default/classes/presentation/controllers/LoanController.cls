@@ -22,6 +22,16 @@ global with sharing class LoanController {
         return service.createLoan(loanData);
     }
 
+    /**
+     * Aura-exposed method to prepay a Loan.
+     * Delegates to PrepayLoanService and returns its result for UI toast handling.
+     */
+    @AuraEnabled
+    public static Object prepayLoanApex(Id loanId) {
+        PrepayLoanService.PrepayResult res = PrepayLoanService.prepayLoan(loanId);
+        return res;
+    }
+
     // Wrapper class for responses
     global class ResponseWrapper {
         @AuraEnabled

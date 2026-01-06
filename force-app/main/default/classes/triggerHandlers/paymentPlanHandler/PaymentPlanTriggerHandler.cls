@@ -11,7 +11,7 @@ public class PaymentPlanTriggerHandler extends TriggerHandler {
      * Handles logic that occurs after a Payment_Plan__c record is updated.
      * - If all Payment_Plan__c records for a loan are 'Completed', sets the Loan__c status to 'Closed'.
      * - If any Payment_Plan__c record is 'Failed', sets the Loan__c status to 'Failed'.
-     * - If some payment plans are 'Completed' and others are 'Pending', sets loan status to 'Pending' (reflecting partial completion)
+     * - If some payment plans are 'Completed' and others are 'Pending', sets loan status to 'Under Review' (reflecting partial completion)
      * - If all payment plans are 'Pending', sets loan status to 'Pending' (initial state)
      */
 public override void afterUpdate() {
@@ -50,11 +50,6 @@ public override void afterUpdate() {
             Boolean allCompleted = true;
             Boolean anyFailed = false;
             Boolean anyCompleted = false;
-
-            // Reset flags for proper evaluation
-            allCompleted = true;
-            anyFailed = false;
-            anyCompleted = false;
 
             // Properly evaluate all payment plans to determine their statuses
             for (Payment_Plan__c plan : plans) {
