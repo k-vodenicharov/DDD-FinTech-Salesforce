@@ -3,21 +3,22 @@ global class LoanPaymentReminderJob implements Schedulable {
     global void execute(SchedulableContext ctx) {
         System.debug('=== START LoanPaymentReminderJob ===');
         System.debug('System.today(): ' + System.today());
-        System.debug('Looking for payments due on: ' + System.today().addDays(5));
         
-        // Send reminders for payments due 5 days from now
-        List<Payment_Plan__c> payments = [
+        // Send reminders for payments due within the next 5 days (but not today)
+        List<Payment_Plan__c> upcomingPayments = [
             SELECT Id, Payment_Deadline__c, Payment_Status__c, Payment_Amount__c, Loan__r.Account__r.Id, Loan__r.Principal_Plus_Interest__c
             FROM Payment_Plan__c
             WHERE Payment_Status__c != 'Completed'
-            AND Payment_Deadline__c = :System.today().addDays(5) // 5 days before deadline
+            AND Payment_Deadline__c >= :System.today()
+            AND Payment_Deadline__c <= :System.today().addDays(5)
+            AND Payment_Deadline__c != :System.today() // Don't send reminders for today's payments
         ];
         
-        System.debug('Found ' + payments.size() + ' payments due 5 days from now');
+        System.debug('Found ' + upcomingPayments.size() + ' upcoming payments (within next 5 days)');
         
         // Add more debug info
-        for(Payment_Plan__c p : payments) {
-            System.debug('Payment ID: ' + p.Id + ', Deadline: ' + p.Payment_Deadline__c);
+        for(Payment_Plan__c p : upcomingPayments) {
+            System.debug('Upcoming Payment ID: ' + p.Id + ', Deadline: ' + p.Payment_Deadline__c);
         }
 
         Map<Id, List<Contact>> accountContactsMap = new Map<Id, List<Contact>>();
@@ -31,9 +32,9 @@ global class LoanPaymentReminderJob implements Schedulable {
             accountContactsMap.get(contact.AccountId).add(contact);
         }
 
-        // Process payments and send reminders
-        for (Payment_Plan__c payment : payments) {
-            System.debug('Processing payment: ' + payment.Id);
+        // Process upcoming payments and send reminders
+        for (Payment_Plan__c payment : upcomingPayments) {
+            System.debug('Processing upcoming payment: ' + payment.Id);
             Id accountId = payment.Loan__r.Account__r.Id;
             List<Contact> accountContacts = accountContactsMap.get(accountId);
 
@@ -50,9 +51,9 @@ global class LoanPaymentReminderJob implements Schedulable {
                 System.debug('Borrower name: ' + borrowerName);
 
                 if (String.isNotBlank(borrowerEmail)) {
-                    System.debug('Sending email reminder...');
+                    System.debug('Sending upcoming payment reminder...');
                     EmailService.sendUpcomingPaymentReminder(borrowerEmail, borrowerName, payment);
-                    System.debug('Email sent successfully');
+                    System.debug('Upcoming payment email sent successfully');
                 } else {
                     System.debug('Email is blank, skipping');
                 }
@@ -61,15 +62,15 @@ global class LoanPaymentReminderJob implements Schedulable {
             }
         }
         
-        // Send follow-up emails for missed payments (due more than 7 days ago)
+        // Send follow-up emails for missed payments (overdue payments)
         List<Payment_Plan__c> missedPayments = [
             SELECT Id, Payment_Deadline__c, Payment_Status__c, Loan__r.Account__r.Id, Loan__r.Principal_Plus_Interest__c
             FROM Payment_Plan__c
             WHERE Payment_Status__c != 'Completed'
-            AND Payment_Deadline__c < :System.today().addDays(-7) // Deadline passed more than 7 days ago
+            AND Payment_Deadline__c < :System.today() // Overdue payments
         ];
 
-        System.debug('Found ' + missedPayments.size() + ' missed payments');
+        System.debug('Found ' + missedPayments.size() + ' missed payments (overdue)');
         for(Payment_Plan__c p : missedPayments) {
             System.debug('Missed Payment ID: ' + p.Id + ', Deadline: ' + p.Payment_Deadline__c);
         }

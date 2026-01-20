@@ -23,12 +23,14 @@ This repository contains a Salesforce implementation for managing loan applicati
 - Payment Plan records created with 1st day of next month as deadline
 
 ### 4. Loan Term Adjustment
-- Flow or trigger detects changes to Loan_Term__c
-- Passes event to Apex invocable method
+- Trigger detects changes to Loan_Term__c
+- Passes event to Apex service method
 - Apex class handles logic of adjusting Payment_Plan__c records
 - If loan term is reduced, excess Payment_Plan__c records deleted
 - If loan term is increased, new Payment_Plan__c records created
 - Total Payment_Amount__c of all Payment_Plan__c records always equals Principal_Plus_Interest__c
+
+**Implementation Note:** The system now uses an Apex-centric orchestration approach with `LoanService.invokeAdjustPaymentPlans(List<Id>)` as the single authoritative method for payment plan adjustments, replacing the deprecated Flow-based approach.
 
 ### 5. Loan Status Automation
 - Trigger or process monitors changes in Payment_Plan__c.Payment_Status__c
@@ -53,6 +55,18 @@ This repository contains a Salesforce implementation for managing loan applicati
 - Displays a success toast with remaining balance information
 - Supports being triggered from both a Loan record page action and a row-level action in the Account → Loans related list
 - Not embedded in the loan creation form
+- **Integration**: Upon prepayment, recalculates interest based on actual loan term and adjusts payment plans accordingly
+
+### 9. Loan Restructuring
+- Detects when Loan_Term__c is increased or decreased after loan creation
+- Detects when Interest_Rate__c is changed after loan creation
+- Creates or removes Payment_Plan__c records to match new loan term when extending term
+- Recalculates Principal_Plus_Interest__c when interest rate changes
+- Adjusts all existing Payment_Plan__c records to ensure their total equals the recalculated amount
+- Handles both term extension and interest rate changes in a single operation when both change simultaneously
+- Maintains consistency and avoids double recalculation
+- Follows DDD principles with business logic in Domain layer and orchestration in Service layer
+- Trigger-based detection with proper recursion guards and bulk safety
 
 ## Data Model
 
@@ -199,12 +213,14 @@ When a loan is created:
 ### `Test 7:` Payment Plan Adjustment
 1. Create a loan with Loan Term = 3 months
 2. Navigate to the loan record
-3. Use the Invocable_LoanTermAdjustment flow to increase the loan term to 5 months
+3. Update the Loan_Term__c field to 5 months
 4. Verify that:
    - 2 new payment plans are created
    - Existing payment plans retain their amounts
    - All payment plans have correct deadlines
    - Total payment amount still equals Principal_Plus_Interest__c
+
+**Test Note:** The payment plan adjustment is now handled entirely through the Apex-centric `LoanService.invokeAdjustPaymentPlans(List<Id>)` method, which is automatically triggered by the LoanTrigger when the Loan_Term__c field is updated.
 
 ### `Test 8:` Loan Repayment Notifications (Immediate Testing)
 1. Create a new loan with Loan Term = 3 months
@@ -240,7 +256,30 @@ When a loan is created:
    - The loan status is updated to "Closed"
    - A success toast notification appears
    - The remaining balance is displayed in the toast message
+   - **Behavior**: Interest is recalculated based on actual loan term, and the Principal_Plus_Interest__c field is adjusted accordingly
 8. Verify that the loan can no longer be modified through normal processes since it's closed
+
+### `Test 10:` Loan Restructuring
+1. Create a new loan with Loan Term = 3 months and Interest Rate = 5%
+2. Navigate to the loan record
+3. Verify that 3 payment plan records are created with correct amounts
+4. Update the Loan_Term__c field to 5 months
+5. Verify that:
+   - 2 new payment plans are created
+   - Existing payment plans retain their amounts
+   - All payment plans have correct deadlines
+   - Total payment amount still equals Principal_Plus_Interest__c
+6. Update the Interest_Rate__c field to 7%
+7. Verify that:
+   - Principal_Plus_Interest__c is recalculated correctly (Loan_Amount + (Loan_Amount * 7%))
+   - All existing payment plans are adjusted to match the new total
+   - New payment plans (if any) are also adjusted to maintain correct total
+8. Update both Loan_Term__c to 4 months and Interest_Rate__c to 6% simultaneously
+9. Verify that:
+   - Payment plans are adjusted for both changes in a single operation
+   - All payment amounts sum to the recalculated Principal_Plus_Interest__c
+   - No double recalculation occurs
+   - Loan status remains consistent throughout the process
 
 
 ## Future Enhancements

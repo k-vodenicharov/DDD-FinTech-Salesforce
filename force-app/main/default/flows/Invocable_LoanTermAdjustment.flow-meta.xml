@@ -8,7 +8,7 @@
         <actionName>LoanDomain</actionName>
         <actionType>apex</actionType>
         <faultConnector>
-            <targetReference>Unsecured_Decision</targetReference>
+            <targetReference>Error_Term_Exceed_Limit</targetReference>
         </faultConnector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
@@ -23,8 +23,8 @@
     <apiVersion>62.0</apiVersion>
     <customErrors>
         <description>Handles error when the loan term exceeds the maximum allowed for secured loans.</description>
-        <name>Loan_Term_Exceed_Limit</name>
-        <label>Loan Term Exceed Limit</label>
+        <name>Error_Term_Exceed_Limit</name>
+        <label>Error: Loan Term Exceed Limit</label>
         <locationX>528</locationX>
         <locationY>623</locationY>
         <customErrorMessages>
@@ -33,16 +33,16 @@
         </customErrorMessages>
     </customErrors>
     <decisions>
-        <name>Unsecured_Decision</name>
-        <label>Unsecured Decision</label>
+        <name>Decision_Term_Exceed_Limit</name>
+        <label>Decision: Loan Term Exceed Limit</label>
         <locationX>528</locationX>
         <locationY>431</locationY>
         <defaultConnector>
-            <targetReference>Loan_Term_Exceed_Limit</targetReference>
+            <targetReference>Adjust_Payment_Plans</targetReference>
         </defaultConnector>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
-            <name>unsecuredDecisionChange</name>
+            <name>Secured_Term_Exceeds_Limit</name>
             <conditionLogic>and</conditionLogic>
             <conditions>
                 <leftValueReference>$Record.Loan_Type__c</leftValueReference>
@@ -51,10 +51,17 @@
                     <stringValue>Secured</stringValue>
                 </rightValue>
             </conditions>
+            <conditions>
+                <leftValueReference>$Record.Loan_Term__c</leftValueReference>
+                <operator>GreaterThan</operator>
+                <rightValue>
+                    <numberValue>6.0</numberValue>
+                </rightValue>
+            </conditions>
             <connector>
-                <targetReference>Loan_Term_Exceed_Limit</targetReference>
+                <targetReference>Error_Term_Exceed_Limit</targetReference>
             </connector>
-            <label>unsecuredDecisionChange</label>
+            <label>Secured Term Exceeds Limit</label>
         </rules>
     </decisions>
     <environments>Default</environments>

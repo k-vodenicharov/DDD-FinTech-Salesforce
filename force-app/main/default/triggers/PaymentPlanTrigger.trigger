@@ -4,7 +4,7 @@ trigger PaymentPlanTrigger on Payment_Plan__c (before insert, before update, aft
     }
     if (Trigger.isAfter && Trigger.isUpdate) {
         PaymentPlanTriggerHandler handler = new PaymentPlanTriggerHandler(Trigger.new, Trigger.old);
-        handler.handleMissedPayments(Trigger.new, Trigger.old);
+        // Handle status-change driven loan status updates
         handler.afterUpdate();
     }
 }

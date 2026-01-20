@@ -1,13 +1,14 @@
 public class PaymentPlanDomain {
     /**
-     * Identifies upcoming payments that are due within the next 5 days and have not been approved.
+     * Identifies upcoming payments that are due within the next 5 days and have not been completed.
      */
     public static List<Payment_Plan__c> identifyUpcomingPayments(List<Payment_Plan__c> payments) {
         List<Payment_Plan__c> upcomingPayments = new List<Payment_Plan__c>();
 
         for (Payment_Plan__c payment : payments) {
-            if (payment.Payment_Deadline__c == Date.today().addDays(5) &&
-                payment.Payment_Status__c != 'Approved') {
+            if (payment.Payment_Deadline__c >= Date.today() &&
+                payment.Payment_Deadline__c <= Date.today().addDays(5) &&
+                payment.Payment_Status__c != 'Completed') {
                 upcomingPayments.add(payment);
             }
         }
@@ -18,7 +19,7 @@ public class PaymentPlanDomain {
     /**
      * Identifies missed payments based on the following conditions:
      * 1. Payment is overdue (Payment_Deadline__c is in the past)
-     * 2. Payment is not marked as "Approved"
+     * 2. Payment is not marked as "Completed"
      */
     public static List<Payment_Plan__c> identifyMissedPayments(List<Payment_Plan__c> newPayments, List<Payment_Plan__c> oldPayments) {
         List<Payment_Plan__c> missedPayments = new List<Payment_Plan__c>();
@@ -28,8 +29,8 @@ public class PaymentPlanDomain {
             Payment_Plan__c oldPayment = oldPayments[i];
 
             if (newPayment.Payment_Deadline__c < Date.today() &&
-                newPayment.Payment_Status__c != 'Approved' &&
-                oldPayment.Payment_Status__c != 'Approved') {
+                newPayment.Payment_Status__c != 'Completed' &&
+                oldPayment.Payment_Status__c != 'Completed') {
                 missedPayments.add(newPayment);
             }
         }

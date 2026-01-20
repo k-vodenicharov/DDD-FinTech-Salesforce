@@ -19,7 +19,8 @@ public class PaymentPlanQueueable implements Queueable {
         }
 
         Decimal totalAmount = loan.Principal_Plus_Interest__c;
-        Integer loanTerm = (Integer) loan.Loan_Term__c;
+        Decimal loanTermDecimal = loan.Loan_Term__c;
+        Integer loanTerm = loanTermDecimal.intValue();
         Decimal paymentAmount = totalAmount / loanTerm;
 
         List<Payment_Plan__c> paymentPlans = new List<Payment_Plan__c>();
@@ -32,7 +33,8 @@ public class PaymentPlanQueueable implements Queueable {
                 Loan__c = loanId,
                 Payment_Deadline__c = firstPaymentDeadline.addMonths(i),
                 Payment_Amount__c = paymentAmount,
-                Payment_Status__c = paymentStatus
+                Payment_Status__c = paymentStatus,
+                Name = 'Payment ' + (i+1) + ' of ' + loanTerm + ' for ' + loan.Loan_Type__c
             );
             paymentPlans.add(payment);
         }

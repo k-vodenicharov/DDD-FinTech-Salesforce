@@ -91,33 +91,4 @@ public override void afterUpdate() {
             update loansToUpdateMap.values();
         }
     }
-    
-    public void handleMissedPayments(List<Payment_Plan__c> newPayments, List<Payment_Plan__c> oldPayments) {
-
-        List<Payment_Plan__c> missedPayments = PaymentPlanDomain.identifyMissedPayments(newPayments, oldPayments);
-
-        if (missedPayments.isEmpty()) {
-            return;
-        }
-
-        for (Payment_Plan__c payment : missedPayments) {
-            Id accountId = payment.Loan__r.Account__r.Id;
-
-            List<Contact> accountContacts = [
-                SELECT Id, Email, FirstName, LastName
-                FROM Contact
-                WHERE AccountId = :accountId
-            ];
-
-            if (!accountContacts.isEmpty()) {
-                Contact borrower = accountContacts[0];
-                String borrowerEmail = borrower.Email;
-                String borrowerName = borrower.FirstName + ' ' + borrower.LastName;
-
-                if (String.isNotBlank(borrowerEmail)) {
-                    EmailService.sendMissedPaymentReminder(borrowerEmail, borrowerName, payment);
-                }
-            }
-        }
-    }
 }

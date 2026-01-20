@@ -23,7 +23,8 @@ public class LoanService {
             // Deserialize JSON loanData to a Map for easy access to fields
             Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(loanData);
             String loanType = (String)data.get('Loan_Type__c');
-            Integer loanTerm = (Integer)data.get('Loan_Term__c');
+            Decimal loanTermDecimal = (Decimal)data.get('Loan_Term__c');
+            Integer loanTerm = loanTermDecimal.intValue();
 
             // Validate loan term based on loan type
             if ((loanType == 'Secured' && loanTerm > 6) || (loanType == 'Unsecured' && loanTerm > 12)) {

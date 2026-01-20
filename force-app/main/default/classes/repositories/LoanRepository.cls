@@ -9,6 +9,6 @@ public class LoanRepository {
      * @return Loan__c instance with specified ID.
      */
     public Loan__c findById(Id loanId) {
-        return [SELECT Id, Loan_Term__c, Principal_Plus_Interest__c, CreatedDate FROM Loan__c WHERE Id = :loanId LIMIT 1];
+        return [SELECT Id, Loan_Term__c, Principal_Plus_Interest__c, CreatedDate, Loan_Type__c FROM Loan__c WHERE Id = :loanId LIMIT 1];
     }
 }

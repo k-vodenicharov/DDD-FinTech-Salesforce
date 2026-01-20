@@ -133,4 +133,43 @@ public class LoanTests {
         System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
         System.assert(response.errorMessage.contains('Loan term exceeds maximum allowed'), 'Error message should mention invalid loan term');
     }
+    
+    @IsTest
+    static void testCreateLoan_Unsecured_MaxTerm() {
+        // Setup test data
+        Account testAccount = new Account(Name = 'Test Account');
+        insert testAccount;
+
+        // Test valid term for unsecured loan (12 months max)
+        String loanData = generateLoanData('Unsecured', 10000, 12, 5, 'Pending', testAccount.Id);
+
+        Test.startTest();
+        LoanController.ResponseWrapper response = LoanController.createLoanApex(loanData);
+        Test.stopTest();
+
+        // Assert that the response indicates success
+        System.assert(response.isSuccess, 'Loan creation should be successful for valid unsecured term');
+        System.assertNotEquals(response.loanId, null, 'Loan ID should be populated on success');
+        System.assertEquals(response.errorMessage, null, 'Error message should be null on success');
+    }
+    
+    @IsTest
+    static void testCreateLoan_Unsecured_InvalidTerm() {
+        // Setup test data
+        Account testAccount = new Account(Name = 'Test Account');
+        insert testAccount;
+
+        // Test invalid term for unsecured loan (term > 12 for 'Unsecured' loans)
+        String loanData = generateLoanData('Unsecured', 10000, 13, 5, 'Pending', testAccount.Id);
+
+        Test.startTest();
+        LoanController.ResponseWrapper response = LoanController.createLoanApex(loanData);
+        Test.stopTest();
+
+        // Assert that the response indicates failure
+        System.assert(!response.isSuccess, 'Loan creation should fail for invalid unsecured term');
+        System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
+        System.assert(response.errorMessage.contains('Loan term exceeds maximum allowed'), 'Error message should mention invalid loan term');
+    }
+    
 }

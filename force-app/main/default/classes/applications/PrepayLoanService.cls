@@ -29,10 +29,10 @@ public with sharing class PrepayLoanService {
         }
 
         try {
-            String loanQuery = 'SELECT Id, Loan_Status__c FROM Loan__c WHERE Id = :loanId LIMIT 1';
+            String loanQuery = 'SELECT Id, Loan_Status__c, Loan_Amount__c, Interest_Rate__c, Loan_Term__c, Principal_Plus_Interest__c, CreatedDate FROM Loan__c WHERE Id = :loanId LIMIT 1';
             Loan__c loan = Database.query(loanQuery);
 
-            String paymentPlanQuery = 'SELECT Id, Payment_Amount__c, Payment_Status__c FROM Payment_Plan__c WHERE Loan__c = :loanId AND Payment_Status__c != \'Completed\'';
+            String paymentPlanQuery = 'SELECT Id, Payment_Amount__c, Payment_Status__c, Payment_Deadline__c FROM Payment_Plan__c WHERE Loan__c = :loanId AND Payment_Status__c != \'Completed\'';
             List<Payment_Plan__c> openPlans = Database.query(paymentPlanQuery);
 
             Decimal remaining = 0;
@@ -43,8 +43,26 @@ public with sharing class PrepayLoanService {
                 pp.Payment_Status__c = 'Completed';
             }
 
-            // DML - close open plans
+            Date prepaymentDate = Date.today();
+            Decimal adjustedPrincipalPlusInterest = LoanDomain.calculateAdjustedInterest(loan, prepaymentDate);
+            loan.Principal_Plus_Interest__c = adjustedPrincipalPlusInterest;
+            
+            // Update all open payment plans to reflect the new total
             if (!openPlans.isEmpty()) {
+                Decimal loanTermDecimal = loan.Loan_Term__c;
+                Integer loanTerm = loanTermDecimal.intValue();
+                Decimal paymentAmount = adjustedPrincipalPlusInterest / loanTerm;
+                Decimal remainder = adjustedPrincipalPlusInterest - (paymentAmount * loanTerm);
+                
+                for (Integer i = 0; i < openPlans.size(); i++) {
+                    Payment_Plan__c plan = openPlans[i];
+                    plan.Payment_Amount__c = paymentAmount;
+                    if (i == 0) {
+                        plan.Payment_Amount__c += remainder;
+                    }
+                }
+                
+                // DML - close open plans with adjusted amounts
                 Database.update(openPlans, AccessLevel.USER_MODE);
             }
 
@@ -54,7 +72,7 @@ public with sharing class PrepayLoanService {
 
             res.success = true;
             res.remainingBalance = remaining;
-            res.message = 'Loan prepaid successfully. Remaining balance paid: ' + String.valueOf(remaining);
+            res.message = 'Loan prepaid successfully. Remaining balance paid: ' + String.valueOf(remaining) + '. Interest adjusted based on actual loan term.';
         } catch (Exception e) {
             res.success = false;
             res.error = 'Error processing prepayment: ' + e.getMessage();
