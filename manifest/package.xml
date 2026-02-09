@@ -6,13 +6,22 @@
     </types>
 
     <types>
-        <name>AuraDefinitionBundle</name>
-        <members>LoanForm</members>
+        <name>LightningComponentBundle</name>
+        <members>accountLoansContainer</members>
+        <members>loanForm</members>
+        <members>prepayLoanAction</members>
     </types>
 
     <types>
         <name>CustomTab</name>
-        <members>*</members>
+        <members>Financial_Product__c</members>
+        <members>Investment__c</members>
+        <members>Investment_Portfolio__c</members>
+        <members>KYC_Verification__c</members>
+        <members>Loan__c</members>
+        <members>Payment_Plan__c</members>
+        <members>Regulatory_Report__c</members>
+        <members>Transaction__c</members>
     </types>
 
     <types>
@@ -21,18 +30,43 @@
     </types>
 
     <types>
+        <name>Layout</name>
+        <members>Account-Account Layout</members>
+        <members>Loan__c-Loan Layout</members>
+        <members>Payment_Plan__c-Payment Plan Layout</members>
+    </types>
+
+    <types>
         <name>CompactLayout</name>
         <members>*</members>
     </types>
 
-    <types>
-        <name>ListView</name>
-        <members>*</members>
-    </types>
 
     <types>
         <name>QuickAction</name>
-        <members>*</members>
+        <members>Case.CloseCaseLightning</members>
+        <members>Case.LogACall</members>
+        <members>Case.NewChildCase</members>
+        <members>CollaborationGroup.NewGroupMember</members>
+        <members>CollaborationGroup.NewGroupRecord</members>
+        <members>FeedItem.NewTaskFromFeedItem</members>
+        <members>Loan__c.Prepay_Loan</members>
+        <members>LogACall</members>
+        <members>NewAccount</members>
+        <members>NewCase</members>
+        <members>NewContact</members>
+        <members>NewEvent</members>
+        <members>NewGroup</members>
+        <members>NewLead</members>
+        <members>NewNote</members>
+        <members>NewOpportunity</members>
+        <members>NewTask</members>
+        <members>PrepayLoan</members>
+        <members>SendEmail</members>
+        <members>Task.Defer</members>
+        <members>Task.EditDescription</members>
+        <members>Task.UpdatePriority</members>
+        <members>Task.UpdateStatus</members>
     </types>
 
     <types>
@@ -50,30 +84,52 @@
         <members>KYC_Verification__c</members>
         <members>Financial_Product__c</members>
         <members>Regulatory_Report__c</members>
+        <members>Loan_Event__e</members>
     </types>
 
     <types>
         <name>ApexClass</name>
+        <members>AdjustmentContext</members>
+        <members>BeforePaymentPlanUpdateHandler</members>
         <members>EmailService</members>
-        <members>LoanService</members>
-        <members>LoanDomain</members>
-        <members>LoanQueueable</members>
-        <members>LoanRepository</members>
+        <members>ILoanRepository</members>
+        <members>IPaymentPlanRepository</members>
+        <members>LoggingService</members>
+        <members>LoanCommandService</members>
         <members>LoanController</members>
-        <members>LoanTriggerHandler</members>
+        <members>LoanDomain</members>
+        <members>LoanEventConsumer</members>
+        <members>LoanEventPublisher</members>
         <members>LoanPaymentReminderJob</members>
+        <members>LoanQueueable</members>
+        <members>LoanQueryService</members>
+        <members>LoanRestController</members>
+        <members>LoanRestructuringTest</members>
+        <members>LoanSelector</members>
+        <members>LoanStatusContext</members>
+        <members>LoanTermAdjustmentInvoker</members>
+        <members>LoanTests</members>
+        <members>LoanTriggerHandler</members>
+        <members>MockRepositoryTests</members>
+        <members>PaymentPlanCommandService</members>
         <members>PaymentPlanDomain</members>
+        <members>PaymentPlanQueryService</members>
         <members>PaymentPlanQueueable</members>
+        <members>PaymentPlanRepository</members>
+        <members>PaymentPlanSelector</members>
         <members>PaymentPlanTriggerHandler</members>
-        <members>TriggerHandler</members>
-        <members>ResponseWrapper</members>
-        <members>UpdateLoanTermRequest</members>
+        <members>PaymentPlanValidationTests</members>
+        <members>PrepayLoanCommandService</members>
+        <members>PrepayLoanServiceTests</members>
+        <members>RepositoryTests</members>
+        <members>SecurityUtil</members>
     </types>
 
     <types>
         <name>ApexTrigger</name>
-        <members>LoanTrigger</members>
+        <members>LoanEventTrigger</members>
         <members>PaymentPlanTrigger</members>
+        <members>LoanTrigger</members>
     </types>
 
     <types>

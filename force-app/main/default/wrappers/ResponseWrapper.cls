@@ -1,8 +1,15 @@
-public class ResponseWrapper {
+/**
+ * Generic response wrapper for UI and REST calls.
+ */
+global class ResponseWrapper {
     @AuraEnabled
-    public Boolean isSuccess;
+    global Boolean isSuccess;
     @AuraEnabled
-    public String errorMessage;
+    global String errorMessage;
     @AuraEnabled
-    public String loanId;
+    global String loanId;
+    @AuraEnabled
+    global Decimal remainingBalance;
+    @AuraEnabled
+    global String jobId;
 }

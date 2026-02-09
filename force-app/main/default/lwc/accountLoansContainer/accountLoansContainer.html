@@ -1,0 +1,114 @@
+<template>
+    <section class="slds-card slds-m-bottom_small">
+        <header class="slds-card__header slds-grid slds-p-horizontal_small">
+            <div class="slds-media slds-media_center slds-has-flexi-truncate">
+                <div class="slds-media__figure">
+                    <lightning-icon icon-name="standard:opportunity" size="small"></lightning-icon>
+                </div>
+                <div class="slds-media__body">
+                    <h2 class="slds-card__header-title">
+                        <span>Loans</span>
+                    </h2>
+                </div>
+            </div>
+        </header>
+
+        <div class="slds-card__body slds-p-horizontal_small">
+            <!-- Loan Create Form -->
+            <c-loan-form onloansubmitted={handleLoanSubmitted} record-id={resolvedRecordId}></c-loan-form>
+
+            <!-- Loans Related List (Apex-backed render) -->
+            <template if:true={loans.length}>
+                <div class="slds-m-top_medium" onloanprepaid={handleLoanPrepaid}>
+                    <lightning-layout multiple-rows>
+                        <lightning-layout-item size="12">
+                            <div class="slds-text-title_caps slds-p-vertical_x-small">Recent Loans</div>
+                        </lightning-layout-item>
+
+                        <lightning-layout-item size="12">
+                            <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <th scope="col"><div class="slds-truncate">Name</div></th>
+                                        <th scope="col"><div class="slds-truncate">Status</div></th>
+                                        <th scope="col"><div class="slds-truncate">Amount</div></th>
+                                        <th scope="col"><div class="slds-truncate">Term</div></th>
+                                        <th scope="col"><div class="slds-truncate">Rate</div></th>
+                                        <th scope="col"><div class="slds-truncate">Created</div></th>
+                                        <th scope="col" class="slds-text-align_right"><div class="slds-truncate">Actions</div></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={loans} for:item="l">
+                                        <tr key={l.id}>
+                                            <td data-label="Name">
+                                                <div class="slds-truncate">
+                                                    <a href={l.url} target="_self">{l.name}</a>
+                                                </div>
+                                            </td>
+                                            <td data-label="Status"><div class="slds-truncate">{l.status}</div></td>
+                                            <td data-label="Amount"><div class="slds-truncate">{l.amount}</div></td>
+                                            <td data-label="Term"><div class="slds-truncate">{l.term}</div></td>
+                                            <td data-label="Rate"><div class="slds-truncate">{l.rate}</div></td>
+                                            <td data-label="Created"><div class="slds-truncate">{l.created}</div></td>
+                                            <td class="slds-text-align_right" style="width: 1%; white-space: nowrap;">
+                                                <lightning-button-menu alternative-text="Actions" icon-name="utility:down" menu-alignment="auto" onselect={handleRowAction}>
+                                                    <lightning-menu-item value={l.prepayValue} label="Prepay Loan"></lightning-menu-item>
+                                                    <lightning-menu-item value={l.editValue} label="Edit"></lightning-menu-item>
+                                                    <lightning-menu-item value={l.deleteValue} label="Delete"></lightning-menu-item>
+                                                </lightning-button-menu>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </lightning-layout-item>
+                    </lightning-layout>
+                </div>
+            </template>
+
+            <template if:false={loans.length}>
+                <div class="slds-text-color_weak slds-m-top_small">
+                    No loans found for this Account yet.
+                </div>
+            </template>
+        </div>
+    </section>
+
+    <template if:true={isEditOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">Edit Loan</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-record-edit-form
+                        object-api-name="Loan__c"
+                        record-id={editRecordId}
+                        onsuccess={handleEditSuccess}
+                        onerror={handleEditError}>
+                        <div class="slds-grid slds-wrap slds-gutters">
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                <lightning-input-field field-name="Loan_Type__c"></lightning-input-field>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                <lightning-input-field field-name="Loan_Amount__c"></lightning-input-field>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                <lightning-input-field field-name="Loan_Term__c"></lightning-input-field>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                <lightning-input-field field-name="Interest_Rate__c"></lightning-input-field>
+                            </div>
+                        </div>
+                        <div class="slds-modal__footer slds-grid slds-grid_align-end slds-gap_small">
+                            <lightning-button variant="neutral" label="Cancel" onclick={handleEditCancel}></lightning-button>
+                            <lightning-button variant="brand" type="submit" label="Save"></lightning-button>
+                        </div>
+                    </lightning-record-edit-form>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

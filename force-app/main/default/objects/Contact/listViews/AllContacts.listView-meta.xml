@@ -4,7 +4,6 @@
     <columns>FULL_NAME</columns>
     <columns>ACCOUNT.NAME</columns>
     <columns>CONTACT.PHONE1</columns>
-    <columns>Artist__c</columns>
     <columns>Type__c</columns>
     <columns>Instrument__c</columns>
     <filterScope>Everything</filterScope>

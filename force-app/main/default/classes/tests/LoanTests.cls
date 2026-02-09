@@ -1,7 +1,28 @@
+/**
+ * Unit tests for LoanController create/adjust flows.
+ */
 @isTest
 public class LoanTests {
 
-    // Helper method to create test loan data as JSON
+    /** Creates a System Administrator user for runAs tests. */
+    private static User createAdminUser() {
+        Profile adminProfile = [SELECT Id FROM Profile WHERE Name = 'System Administrator' LIMIT 1];
+        User u = new User(
+            Alias = 'admin',
+            Email = 'admin.user@example.com',
+            EmailEncodingKey = 'UTF-8',
+            LastName = 'Admin',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
+            ProfileId = adminProfile.Id,
+            TimeZoneSidKey = 'America/Los_Angeles',
+            UserName = 'admin.user+' + String.valueOf(Crypto.getRandomInteger()).replace('-', '') + '@example.com'
+        );
+        insert u;
+        return u;
+    }
+
+    /** Builds serialized loan data for controller inputs. */
     private static String generateLoanData(String loanType, Decimal loanAmount, Integer loanTerm, Decimal interestRate, String loanStatus, Id accountId) {
         Map<String, Object> loanData = new Map<String, Object>{
             'Loan_Type__c' => loanType,
@@ -14,162 +35,169 @@ public class LoanTests {
         return JSON.serialize(loanData);
     }
 
-    // Helper method to parse JSON response into a map for assertions
+    /** Parses JSON response payloads into a map for assertions. */
     private static Map<String, Object> parseJsonResponse(String jsonResponse) {
         return (Map<String, Object>) JSON.deserializeUntyped(jsonResponse);
     }
 
+    /** Verifies successful loan creation with valid inputs. */
     @IsTest
     static void testCreateLoan_Success() {
-        // Setup test data
-        Account testAccount = new Account(Name = 'Test Account');
-        insert testAccount;
+        User admin = createAdminUser();
+        System.runAs(admin) {
+            Account testAccount = new Account(Name = 'Test Account');
+            insert testAccount;
 
-        String loanData = generateLoanData('Unsecured', 10000, 12, 5, 'Pending', testAccount.Id);
+            String loanData = generateLoanData('Unsecured', 10000, 12, 5, 'Pending', testAccount.Id);
 
-        // Test the loan creation method
-        Test.startTest();
-        LoanController.ResponseWrapper response = LoanController.createLoanApex(loanData);
-        Test.stopTest();
+            Test.startTest();
+            ResponseWrapper response = LoanController.createLoanApex(loanData);
+            Test.stopTest();
 
-        // Assert that the response indicates success
-        System.assert(response.isSuccess, 'Loan creation should be successful');
-        System.assertNotEquals(response.loanId, null, 'Loan ID should be populated on success');
-        System.assertEquals(response.errorMessage, null, 'Error message should be null on success');
+            System.assert(response.isSuccess, 'Loan creation should be successful');
+            System.assertNotEquals(response.loanId, null, 'Loan ID should be populated on success');
+            System.assertEquals(response.errorMessage, null, 'Error message should be null on success');
+        }
     }
 
+    /** Verifies secured loan term validation failure. */
     @IsTest
     static void testCreateLoan_Failure_InvalidTerm() {
-        // Setup test data
-        Account testAccount = new Account(Name = 'Test Account');
-        insert testAccount;
+        User admin = createAdminUser();
+        System.runAs(admin) {
+            Account testAccount = new Account(Name = 'Test Account');
+            insert testAccount;
 
-        // Test invalid term for a secured loan (term > 6 for 'Secured' loans)
-        String loanData = generateLoanData('Secured', 10000, 12, 5, 'Pending', testAccount.Id);
+            String loanData = generateLoanData('Secured', 10000, 12, 5, 'Pending', testAccount.Id);
 
-        Test.startTest();
-        LoanController.ResponseWrapper response = LoanController.createLoanApex(loanData);
-        Test.stopTest();
+            Test.startTest();
+            ResponseWrapper response = LoanController.createLoanApex(loanData);
+            Test.stopTest();
 
-        // Assert that the response indicates failure
-        System.assert(!response.isSuccess, 'Loan creation should fail for invalid loan term');
-        System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
-        System.assert(response.errorMessage.contains('Loan term exceeds maximum allowed'), 'Error message should mention invalid loan term');
+            System.assert(!response.isSuccess, 'Loan creation should fail for invalid loan term');
+            System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
+            System.assert(response.errorMessage.contains('Loan term exceeds maximum allowed'), 'Error message should mention invalid loan term');
+        }
     }
 
+    /** Verifies successful term adjustment. */
     @IsTest
     static void testAdjustLoanTerm_Success() {
-        // Setup initial loan
-        Account testAccount = new Account(Name = 'Test Account');
-        insert testAccount;
+        User admin = createAdminUser();
+        System.runAs(admin) {
+            Account testAccount = new Account(Name = 'Test Account');
+            insert testAccount;
 
-        Loan__c testLoan = new Loan__c(
-            Loan_Type__c = 'Unsecured',
-            Loan_Amount__c = 10000,
-            Loan_Term__c = 12,
-            Interest_Rate__c = 5,
-            Loan_Status__c = 'Active',
-            Account__c = testAccount.Id
-        );
-        insert testLoan;
+            Loan__c testLoan = new Loan__c(
+                Loan_Type__c = 'Unsecured',
+                Loan_Amount__c = 10000,
+                Loan_Term__c = 12,
+                Interest_Rate__c = 5,
+                Loan_Status__c = 'Pending',
+                Account__c = testAccount.Id
+            );
+            insert testLoan;
 
-        Integer newLoanTerm = 10; // Valid term adjustment for an unsecured loan
+            Integer newLoanTerm = 10;
 
-        // Test the loan term adjustment
-        Test.startTest();
-        LoanController.ResponseWrapper response = LoanController.adjustLoanTerm(testLoan.Id, newLoanTerm);
-        Test.stopTest();
+            Test.startTest();
+            ResponseWrapper response = LoanController.adjustLoanTerm(testLoan.Id, newLoanTerm);
+            Test.stopTest();
 
-        // Assert that the response indicates success
-        System.assert(response.isSuccess, 'Loan term adjustment should be successful');
-        System.assertEquals(response.errorMessage, null, 'Error message should be null on success');
+            System.assert(response.isSuccess, 'Loan term adjustment should be successful');
+            System.assertEquals(response.errorMessage, null, 'Error message should be null on success');
 
-        // Verify the loan term was updated in the database
-        Loan__c updatedLoan = [SELECT Loan_Term__c FROM Loan__c WHERE Id = :testLoan.Id];
-        System.assertEquals(updatedLoan.Loan_Term__c, newLoanTerm, 'Loan term should be updated to new value');
+            Loan__c updatedLoan = [SELECT Loan_Term__c FROM Loan__c WHERE Id = :testLoan.Id];
+            System.assertEquals(newLoanTerm, updatedLoan.Loan_Term__c, 'Loan term should be updated to new value');
+        }
     }
 
+    /** Verifies adjustment fails for a missing loan. */
     @IsTest
     static void testAdjustLoanTerm_Failure_LoanNotFound() {
-        // Setup an invalid loan ID
-        String invalidLoanId = 'a0Q0B00000INVALID'; // Invalid ID format for testing
+        User admin = createAdminUser();
+        System.runAs(admin) {
+            String prefix = Loan__c.SObjectType.getDescribe().getKeyPrefix();
+            Id invalidLoanId = (Id) (prefix + '000000000000AAA');
 
-        // Test the loan term adjustment with an invalid loan ID
-        Test.startTest();
-        LoanController.ResponseWrapper response = LoanController.adjustLoanTerm(invalidLoanId, 10);
-        Test.stopTest();
+            Test.startTest();
+            ResponseWrapper response = LoanController.adjustLoanTerm(invalidLoanId, 10);
+            Test.stopTest();
 
-        // Assert that the response indicates failure
-        System.assert(!response.isSuccess, 'Loan term adjustment should fail for a nonexistent loan');
-        System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
-        System.assert(response.errorMessage.contains('Loan not found'), 'Error message should mention loan not found');
+            System.assert(!response.isSuccess, 'Loan term adjustment should fail for a nonexistent loan');
+            System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
+            System.assert(response.errorMessage.contains('Loan not found'), 'Error message should mention loan not found');
+        }
     }
 
+    /** Verifies adjustment fails for invalid secured term. */
     @IsTest
     static void testAdjustLoanTerm_Failure_InvalidTerm() {
-        // Setup initial loan
-        Account testAccount = new Account(Name = 'Test Account');
-        insert testAccount;
+        User admin = createAdminUser();
+        System.runAs(admin) {
+            Account testAccount = new Account(Name = 'Test Account');
+            insert testAccount;
 
-        Loan__c testLoan = new Loan__c(
-            Loan_Type__c = 'Secured',
-            Loan_Amount__c = 10000,
-            Loan_Term__c = 6,
-            Interest_Rate__c = 5,
-            Loan_Status__c = 'Active',
-            Account__c = testAccount.Id
-        );
-        insert testLoan;
+            Loan__c testLoan = new Loan__c(
+                Loan_Type__c = 'Secured',
+                Loan_Amount__c = 10000,
+                Loan_Term__c = 6,
+                Interest_Rate__c = 5,
+                Loan_Status__c = 'Pending',
+                Account__c = testAccount.Id
+            );
+            insert testLoan;
 
-        Integer invalidNewLoanTerm = 12; // Invalid term adjustment for a secured loan (term > 6)
+            Integer invalidNewLoanTerm = 12;
 
-        // Test the loan term adjustment
-        Test.startTest();
-        LoanController.ResponseWrapper response = LoanController.adjustLoanTerm(testLoan.Id, invalidNewLoanTerm);
-        Test.stopTest();
+            Test.startTest();
+            ResponseWrapper response = LoanController.adjustLoanTerm(testLoan.Id, invalidNewLoanTerm);
+            Test.stopTest();
 
-        // Assert that the response indicates failure
-        System.assert(!response.isSuccess, 'Loan term adjustment should fail for invalid loan term');
-        System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
-        System.assert(response.errorMessage.contains('Loan term exceeds maximum allowed'), 'Error message should mention invalid loan term');
+            System.assert(!response.isSuccess, 'Loan term adjustment should fail for invalid loan term');
+            System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
+            System.assert(response.errorMessage.contains('Loan term exceeds maximum allowed'), 'Error message should mention invalid loan term');
+        }
     }
     
+    /** Verifies max term for unsecured loans is accepted. */
     @IsTest
     static void testCreateLoan_Unsecured_MaxTerm() {
-        // Setup test data
-        Account testAccount = new Account(Name = 'Test Account');
-        insert testAccount;
+        User admin = createAdminUser();
+        System.runAs(admin) {
+            Account testAccount = new Account(Name = 'Test Account');
+            insert testAccount;
 
-        // Test valid term for unsecured loan (12 months max)
-        String loanData = generateLoanData('Unsecured', 10000, 12, 5, 'Pending', testAccount.Id);
+            String loanData = generateLoanData('Unsecured', 10000, 12, 5, 'Pending', testAccount.Id);
 
-        Test.startTest();
-        LoanController.ResponseWrapper response = LoanController.createLoanApex(loanData);
-        Test.stopTest();
+            Test.startTest();
+            ResponseWrapper response = LoanController.createLoanApex(loanData);
+            Test.stopTest();
 
-        // Assert that the response indicates success
-        System.assert(response.isSuccess, 'Loan creation should be successful for valid unsecured term');
-        System.assertNotEquals(response.loanId, null, 'Loan ID should be populated on success');
-        System.assertEquals(response.errorMessage, null, 'Error message should be null on success');
+            System.assert(response.isSuccess, 'Loan creation should be successful for valid unsecured term');
+            System.assertNotEquals(response.loanId, null, 'Loan ID should be populated on success');
+            System.assertEquals(response.errorMessage, null, 'Error message should be null on success');
+        }
     }
     
+    /** Verifies term validation for unsecured loans. */
     @IsTest
     static void testCreateLoan_Unsecured_InvalidTerm() {
-        // Setup test data
-        Account testAccount = new Account(Name = 'Test Account');
-        insert testAccount;
+        User admin = createAdminUser();
+        System.runAs(admin) {
+            Account testAccount = new Account(Name = 'Test Account');
+            insert testAccount;
 
-        // Test invalid term for unsecured loan (term > 12 for 'Unsecured' loans)
-        String loanData = generateLoanData('Unsecured', 10000, 13, 5, 'Pending', testAccount.Id);
+            String loanData = generateLoanData('Unsecured', 10000, 13, 5, 'Pending', testAccount.Id);
 
-        Test.startTest();
-        LoanController.ResponseWrapper response = LoanController.createLoanApex(loanData);
-        Test.stopTest();
+            Test.startTest();
+            ResponseWrapper response = LoanController.createLoanApex(loanData);
+            Test.stopTest();
 
-        // Assert that the response indicates failure
-        System.assert(!response.isSuccess, 'Loan creation should fail for invalid unsecured term');
-        System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
-        System.assert(response.errorMessage.contains('Loan term exceeds maximum allowed'), 'Error message should mention invalid loan term');
+            System.assert(!response.isSuccess, 'Loan creation should fail for invalid unsecured term');
+            System.assertEquals(response.loanId, null, 'Loan ID should be null on failure');
+            System.assert(response.errorMessage.contains('Loan term exceeds maximum allowed'), 'Error message should mention invalid loan term');
+        }
     }
     
 }

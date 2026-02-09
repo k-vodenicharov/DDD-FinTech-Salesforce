@@ -1,40 +1,70 @@
+/**
+ * Domain logic for payment plan schedules and status evaluation.
+ */
 public class PaymentPlanDomain {
     /**
-     * Identifies upcoming payments that are due within the next 5 days and have not been completed.
+     * Distributes a total amount across a term, rounding to cents and applying remainder to the first plan.
      */
-    public static List<Payment_Plan__c> identifyUpcomingPayments(List<Payment_Plan__c> payments) {
-        List<Payment_Plan__c> upcomingPayments = new List<Payment_Plan__c>();
+    public List<Decimal> distributeAmounts(Decimal totalAmount, Integer term) {
+        List<Decimal> amounts = new List<Decimal>();
+        if (term == null || term <= 0) return amounts;
 
-        for (Payment_Plan__c payment : payments) {
-            if (payment.Payment_Deadline__c >= Date.today() &&
-                payment.Payment_Deadline__c <= Date.today().addDays(5) &&
-                payment.Payment_Status__c != 'Completed') {
-                upcomingPayments.add(payment);
+        Decimal total = (totalAmount == null) ? 0 : totalAmount;
+        Decimal totalRounded = total.setScale(2, System.RoundingMode.HALF_UP);
+        Decimal baseAmount = (totalRounded / term).setScale(2, System.RoundingMode.HALF_UP);
+        // Remainder is added to the first payment to preserve totals.
+        Decimal remainder = totalRounded - (baseAmount * term);
+
+        for (Integer i = 0; i < term; i++) {
+            Decimal amt = baseAmount;
+            if (i == 0) {
+                amt += remainder;
             }
+            amounts.add(amt);
         }
-
-        return upcomingPayments;
+        return amounts;
     }
 
     /**
-     * Identifies missed payments based on the following conditions:
-     * 1. Payment is overdue (Payment_Deadline__c is in the past)
-     * 2. Payment is not marked as "Completed"
+     * Builds monthly deadlines starting from the first day of the next month.
      */
-    public static List<Payment_Plan__c> identifyMissedPayments(List<Payment_Plan__c> newPayments, List<Payment_Plan__c> oldPayments) {
-        List<Payment_Plan__c> missedPayments = new List<Payment_Plan__c>();
+    public List<Date> buildDeadlines(Date startDate, Integer term) {
+        List<Date> deadlines = new List<Date>();
+        if (term == null || term <= 0) return deadlines;
+        Date base = (startDate == null ? Date.today() : startDate).toStartOfMonth().addMonths(1);
+        for (Integer i = 0; i < term; i++) {
+            deadlines.add(base.addMonths(i));
+        }
+        return deadlines;
+    }
 
-        for (Integer i = 0; i < newPayments.size(); i++) {
-            Payment_Plan__c newPayment = newPayments[i];
-            Payment_Plan__c oldPayment = oldPayments[i];
+    /**
+     * Determines loan status from the statuses of its payment plans.
+     */
+    public String determineLoanStatus(List<Payment_Plan__c> plans) {
+        if (plans == null || plans.isEmpty()) return 'Pending';
 
-            if (newPayment.Payment_Deadline__c < Date.today() &&
-                newPayment.Payment_Status__c != 'Completed' &&
-                oldPayment.Payment_Status__c != 'Completed') {
-                missedPayments.add(newPayment);
+        Boolean allCompleted = true;
+        Boolean anyFailed = false;
+        Boolean anyNonPending = false;
+
+        for (Payment_Plan__c plan : plans) {
+            if (plan.Payment_Status__c == 'Failed') {
+                anyFailed = true;
+                allCompleted = false;
+                break;
+            }
+            if (plan.Payment_Status__c != 'Pending') {
+                anyNonPending = true;
+            }
+            if (plan.Payment_Status__c != 'Completed') {
+                allCompleted = false;
             }
         }
 
-        return missedPayments;
+        if (anyFailed) return 'Failed';
+        if (allCompleted) return 'Closed';
+        if (anyNonPending) return 'Under Review';
+        return 'Pending';
     }
 }

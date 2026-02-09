@@ -1,0 +1,43 @@
+<template>
+    <div class="slds-box slds-box_x-small slds-theme_default">
+        <div class="slds-p-around_small">
+            <div class="slds-text-heading_small slds-m-bottom_x-small">Prepay Loan</div>
+            <p class="slds-text-body_regular slds-m-bottom_small">
+                This will mark all remaining payment plans as <strong>Completed</strong> and close the loan.
+                This action cannot be undone.
+            </p>
+
+            <div class="slds-grid slds-gutters_small">
+                <div class="slds-col">
+                    <lightning-button
+                        label="Prepay Loan"
+                        variant="brand"
+                        onclick={handlePrepayClick}
+                        disabled={isLoading}>
+                    </lightning-button>
+                </div>
+                <div class="slds-col">
+                    <lightning-button
+                        label="Cancel"
+                        variant="neutral"
+                        onclick={handleCancel}
+                        disabled={isLoading}>
+                    </lightning-button>
+                </div>
+            </div>
+
+            <template if:true={isLoading}>
+                <div class="slds-m-top_small">
+                    <lightning-spinner alternative-text="Processing prepayment"></lightning-spinner>
+                </div>
+            </template>
+
+            <template if:true={errorMessage}>
+                <div class="slds-alert slds-alert_error slds-m-top_small" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <p>{errorMessage}</p>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

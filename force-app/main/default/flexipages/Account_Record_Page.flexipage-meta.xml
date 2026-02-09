@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <FlexiPage xmlns="http://soap.sforce.com/2006/04/metadata">
     <flexiPageRegions>
         <itemInstances>
@@ -48,6 +48,12 @@
                 </componentInstanceProperties>
                 <componentName>force:relatedListContainer</componentName>
                 <identifier>force_relatedListContainer</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>c:accountLoansContainer</componentName>
+                <identifier>c_accountLoansContainer</identifier>
             </componentInstance>
         </itemInstances>
         <mode>Replace</mode>
@@ -440,46 +446,6 @@
                 <identifier>RecordTypeField</identifier>
             </fieldInstance>
         </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.Capacity__c</fieldItem>
-                <identifier>RecordCapacity_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldItem>Record.Account_Type__c</fieldItem>
-                <identifier>RecordAccount_Type__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldItem>Record.Balence__c</fieldItem>
-                <identifier>RecordBalence__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldItem>Record.Interest_Rate__c</fieldItem>
-                <identifier>RecordInterest_Rate__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldItem>Record.Open_Date__c</fieldItem>
-                <identifier>RecordOpen_Date__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldItem>Record.Status__c</fieldItem>
-                <identifier>RecordStatus__cField</identifier>
-            </fieldInstance>
-        </itemInstances>
         <name>Facet-cd11dc98-1820-4d11-a5b3-517557789d55</name>
         <type>Facet</type>
     </flexiPageRegions>
@@ -512,36 +478,6 @@
                 </fieldInstanceProperties>
                 <fieldItem>Record.Website</fieldItem>
                 <identifier>RecordWebsiteField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.NumberofLocations__c</fieldItem>
-                <identifier>RecordNumberofLocations_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.Security_Provided__c</fieldItem>
-                <identifier>RecordSecurity_Provided_cField</identifier>
-            </fieldInstance>
-        </itemInstances>
-        <itemInstances>
-            <fieldInstance>
-                <fieldInstanceProperties>
-                    <name>uiBehavior</name>
-                    <value>none</value>
-                </fieldInstanceProperties>
-                <fieldItem>Record.Security_Percent__c</fieldItem>
-                <identifier>RecordSecurity_Percent_cField</identifier>
             </fieldInstance>
         </itemInstances>
         <name>Facet-44910162-df64-44cd-a2da-056644ccc3d9</name>

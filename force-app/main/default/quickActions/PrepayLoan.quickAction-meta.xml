@@ -2,8 +2,8 @@
 <QuickAction xmlns="http://soap.sforce.com/2006/04/metadata">
     <height>200</height>
     <label>Prepay Loan</label>
-    <lightningComponent>PrepayLoanAction</lightningComponent>
+    <lightningWebComponent>prepayLoanAction</lightningWebComponent>
     <optionsCreateFeedItem>false</optionsCreateFeedItem>
-    <type>LightningComponent</type>
+    <type>LightningWebComponent</type>
     <width>100</width>
 </QuickAction>

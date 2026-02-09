@@ -5,10 +5,10 @@
         <label>Adjust Payment Plans</label>
         <locationX>176</locationX>
         <locationY>323</locationY>
-        <actionName>LoanDomain</actionName>
+        <actionName>LoanTermAdjustmentInvoker</actionName>
         <actionType>apex</actionType>
         <faultConnector>
-            <targetReference>Error_Term_Exceed_Limit</targetReference>
+            <targetReference>Error_Adjustment_Failed</targetReference>
         </faultConnector>
         <flowTransactionModel>CurrentTransaction</flowTransactionModel>
         <inputParameters>
@@ -17,7 +17,7 @@
                 <elementReference>$Record.Id</elementReference>
             </value>
         </inputParameters>
-        <nameSegment>LoanDomain</nameSegment>
+        <nameSegment>LoanTermAdjustmentInvoker</nameSegment>
         <offset>0</offset>
     </actionCalls>
     <apiVersion>62.0</apiVersion>
@@ -28,7 +28,29 @@
         <locationX>528</locationX>
         <locationY>623</locationY>
         <customErrorMessages>
-            <errorMessage>Loan term exceeds maximum allowed value for {!$Record.Loan_Type__c} loans (6 months).</errorMessage>
+            <errorMessage>Loan term exceeds maximum allowed for Secured loans (6 months).</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <customErrors>
+        <description>Handles unexpected errors during payment plan adjustment.</description>
+        <name>Error_Adjustment_Failed</name>
+        <label>Error: Payment Plan Adjustment Failed</label>
+        <locationX>528</locationX>
+        <locationY>723</locationY>
+        <customErrorMessages>
+            <errorMessage>Unable to adjust payment plans. Please try again.</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <customErrors>
+        <description>Handles error when the loan term exceeds the maximum allowed for unsecured loans.</description>
+        <name>Error_Term_Exceed_Limit_Unsecured</name>
+        <label>Error: Loan Term Exceed Limit (Unsecured)</label>
+        <locationX>728</locationX>
+        <locationY>623</locationY>
+        <customErrorMessages>
+            <errorMessage>Loan term exceeds maximum allowed for Unsecured loans (12 months).</errorMessage>
             <isFieldError>false</isFieldError>
         </customErrorMessages>
     </customErrors>
@@ -63,6 +85,28 @@
             </connector>
             <label>Secured Term Exceeds Limit</label>
         </rules>
+        <rules>
+            <name>Unsecured_Term_Exceeds_Limit</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Loan_Type__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Unsecured</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>$Record.Loan_Term__c</leftValueReference>
+                <operator>GreaterThan</operator>
+                <rightValue>
+                    <numberValue>12.0</numberValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Error_Term_Exceed_Limit_Unsecured</targetReference>
+            </connector>
+            <label>Unsecured Term Exceeds Limit</label>
+        </rules>
     </decisions>
     <environments>Default</environments>
     <interviewLabel>Invocable LoanTermAdjustment {!$Flow.CurrentDateTime}</interviewLabel>
@@ -90,7 +134,7 @@
         <locationX>50</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>Adjust_Payment_Plans</targetReference>
+            <targetReference>Decision_Term_Exceed_Limit</targetReference>
         </connector>
         <filterLogic>and</filterLogic>
         <filters>

@@ -1,0 +1,67 @@
+<template>
+    <div class="slds-box slds-theme_default slds-m-bottom_small">
+        <h2 class="slds-text-heading_small slds-m-bottom_small">Create New Loan</h2>
+        
+        <template if:true={errorMessage}>
+            <div class="slds-notify slds-notify_alert slds-theme_error" role="alert">
+                <span class="slds-assistive-text">Error</span>
+                <p>{errorMessage}</p>
+            </div>
+        </template>
+        
+        <div class="slds-grid slds-gutters slds-wrap">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-combobox
+                    label="Loan Type"
+                    value={loanType}
+                    options={loanTypeOptions}
+                    onchange={handleLoanTypeChange}
+                    required>
+                </lightning-combobox>
+            </div>
+            
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input
+                    type="number"
+                    label="Loan Amount"
+                    value={loanAmount}
+                    onchange={handleAmountChange}
+                    min="0"
+                    step="0.01"
+                    required>
+                </lightning-input>
+            </div>
+            
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input
+                    type="number"
+                    label="Loan Term (months)"
+                    value={loanTerm}
+                    onchange={handleTermChange}
+                    min="1"
+                    required>
+                </lightning-input>
+            </div>
+            
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-input
+                    type="number"
+                    label="Interest Rate (%)"
+                    value={interestRate}
+                    onchange={handleRateChange}
+                    min="0"
+                    step="0.01"
+                    required>
+                </lightning-input>
+            </div>
+        </div>
+        
+        <div class="slds-m-top_small">
+            <lightning-button 
+                label="Create" 
+                variant="brand" 
+                onclick={handleSave}>
+            </lightning-button>
+        </div>
+    </div>
+</template>

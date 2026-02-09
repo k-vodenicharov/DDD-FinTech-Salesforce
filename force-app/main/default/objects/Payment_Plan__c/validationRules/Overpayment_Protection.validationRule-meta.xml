@@ -2,7 +2,7 @@
 <ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Overpayment_Protection</fullName>
     <active>true</active>
-    <description>Prevents overpayments unless BYPASS__c is checked</description>
-    <errorConditionFormula>(Payment_Amount__c > Loan__r.Principal_Plus_Interest__c) && (NOT(BYPASS__c))</errorConditionFormula>
-    <errorMessage>Payment amount cannot exceed the principal plus interest amount unless BYPASS__c is checked.</errorMessage>
+    <description>Prevents manual edits to payment amount unless BYPASS__c is checked; totals are enforced in Apex</description>
+    <errorConditionFormula>AND(NOT(ISNEW()), ISCHANGED(Payment_Amount__c), NOT(BYPASS__c))</errorConditionFormula>
+    <errorMessage>Payment amount cannot be edited unless BYPASS__c is checked.</errorMessage>
 </ValidationRule>

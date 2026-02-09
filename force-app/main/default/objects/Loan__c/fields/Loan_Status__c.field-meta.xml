@@ -3,6 +3,7 @@
     <fullName>Loan_Status__c</fullName>
     <label>Loan Status</label>
     <required>false</required>
+    <trackHistory>true</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
