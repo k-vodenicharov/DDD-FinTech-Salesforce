@@ -2,13 +2,41 @@
 
 This repository contains a Salesforce implementation for managing loan applications with payment plans, following Domain-Driven Design (DDD) principles.
 
+## Deployment Notes
+
+### Post-Deploy Setup (Required For A Clean Demo)
+
+Follow these steps after deployment so a fresh org looks like the reference demo:
+
+1. Assign the permission set:
+   - Setup -> Permission Sets -> `Fin_Tech_User` -> Manage Assignments -> add your user.
+   - This grants `ApiEnabled`, delete on `Loan__c`, and sets custom tabs to visible.
+2. Ensure the Fin Tech app shows the custom tabs:
+   - App Manager -> Fin Tech -> Edit -> Navigation Items -> make sure the custom tabs are in Selected Items.
+   - In the app header, click the pencil icon on the nav bar and choose "Reset" (user nav personalization can hide tabs).
+3. Ensure the Account record page includes the Loans UI:
+   - Lightning App Builder -> Account Record Page -> add the `accountLoansContainer` LWC.
+   - Activate the page for the Fin Tech app or the intended profiles.
+4. Ensure the Prepay Loan action is available on Loan records:
+   - Object Manager -> Loan__c -> Page Layouts -> add Quick Action `Prepay Loan` to the actions bar.
+   - If you use a custom Lightning Record Page for Loan, add the action to its Highlights Panel.
+
+### Schedule Payment Reminders (Recommended)
+Scheduling is org-specific, so the recommended approach is to schedule `LoanPaymentReminderJob` after deployment.
+
+You can schedule from **Setup -> Apex Classes -> Schedule Apex** or run Execute Anonymous:
+
+```apex
+String cronExp = '0 0 8 * * ?';
+System.schedule('Loan Payment Reminder Daily 8AM', cronExp, new LoanPaymentReminderJob());
+```
+
 ## Features Implemented
 
 ### 1. Custom Lightning Component
 - Created a custom Lightning Web Component (LWC) with 4 fields: Loan Type, Loan Amount, Loan Term, Interest Rate
 - Loan Status is system-controlled and automatically set to "Pending" when the Loan record is created; hidden on the Loan layout/edit UI but visible in the Account loans list
 - Save button creates a new loan record with entered values
-- Row-level edit uses LDS (lightning-record-edit-form modal) to update loans
 - Client-side validation enforces maximum loan terms:
   - Secured loans: maximum 6 months
   - Unsecured loans: maximum 12 months
@@ -37,7 +65,7 @@ This repository contains a Salesforce implementation for managing loan applicati
 **Implementation Note:** The system uses a hybrid approach with both Flow and Apex for payment plan adjustments. The Flow (`Invocable_LoanTermAdjustment.flow-meta.xml`) enforces UI term limits for Secured (6) and Unsecured (12) and invokes `LoanTermAdjustmentInvoker.adjustLoanTerms` to adjust payment plans when the term changes. The Loan trigger enqueues adjustments only when Interest_Rate__c or Loan_Amount__c changes (to avoid duplicate adjustments when Loan_Term__c changes in the UI).
 
 ### 5. Loan Status Automation
-- Apex trigger monitors changes in Payment_Plan__c.Payment_Status__c
+- Trigger in Payment_Plan__c.Payment_Status__c
 - If all Payment_Plan__c records marked as "Completed", set loan's Loan_Status__c to "Closed"
 - If any Payment_Plan__c records fail, set loan status to "Failed"
 
@@ -137,7 +165,7 @@ This implementation follows Domain-Driven Design (DDD) principles with the follo
 ### Step 5: Monitor Loan Status
 1. As payment plans are marked as completed, the loan status will automatically update to "Closed"
 2. If any payment plan fails, the loan status will update to "Failed"
-3. If any payment plan is not "Pending" (and none are "Failed"), the loan status will be "Under Review" (Apex domain logic)
+3. If any payment plan is not "Pending" (and none are "Failed"), the loan status will be "Under Review"
 4. All status changes are tracked and displayed in the loan record
 
 ### Step 6: Receive Notifications
@@ -157,7 +185,7 @@ When a loan is created:
 
 ### Status Management
 - Payment Plan Status: "Pending" when created, "Completed" when paid, "Failed" when missed
-- Loan Status: "Pending" initially, "Under Review" when any payment plan is not "Pending" and none failed, "Closed" when all payments completed, "Failed" when any payment fails (Apex domain logic)
+- Loan Status: "Pending" initially, "Under Review" when any payment plan is not "Pending" and none failed, "Closed" when all payments completed, "Failed" when any payment fails
 
 ### Validation
 - Client-side validation in Lightning component
@@ -273,7 +301,7 @@ job.execute(null);
 2. Navigate to the loan record
 3. Verify that 3 payment plan records are created with "Pending" status
 4. Click the "Actions" dropdown in the loan record header
-5. Select "Prepay Loan" from the menu. If the Quick Action button is missing, add it via Lightning Record Page (LRP) or Page Layout.
+5. Select "Prepay Loan" from the menu `If the Quick Action button is missing, just added via LRP or Page Layout`
 6. Confirm the prepayment in the dialog that appears
 7. Verify that:
    - All 3 payment plans are marked as "Completed"
@@ -313,36 +341,5 @@ This implementation will be extended with additional features including:
 - Approval workflows
 - Advanced notification preferences
 - Data archiving for historical records
-
-## Deployment Notes
-
-### Post-Deploy Setup (Required For A Clean Demo)
-
-Follow these steps after deployment so a fresh org looks like the reference demo:
-
-1. Enable UI API GraphQL:
-   - Setup -> GraphQL API -> enable UI API GraphQL (and UI API if prompted).
-2. Assign the permission set:
-   - Setup -> Permission Sets -> `Fin_Tech_User` -> Manage Assignments -> add your user.
-   - This grants `ApiEnabled`, delete on `Loan__c`, and sets custom tabs to visible.
-3. Ensure the Fin Tech app shows the custom tabs:
-   - App Manager -> Fin Tech -> Edit -> Navigation Items -> make sure the custom tabs are in Selected Items.
-   - In the app header, click the pencil icon on the nav bar and choose "Reset" (user nav personalization can hide tabs).
-4. Ensure the Account record page includes the Loans UI:
-   - Lightning App Builder -> Account Record Page -> add the `accountLoansContainer` LWC.
-   - Activate the page for the Fin Tech app or the intended profiles.
-5. Ensure the Prepay Loan action is available on Loan records:
-   - Object Manager -> Loan__c -> Page Layouts -> add Quick Action `Prepay Loan` to the actions bar.
-   - If you use a custom Lightning Record Page for Loan, add the action to its Highlights Panel.
-
-### Schedule Payment Reminders (Recommended)
-Scheduling is org-specific, so the recommended approach is to schedule `LoanPaymentReminderJob` after deployment.
-
-You can schedule from **Setup -> Apex Classes -> Schedule Apex** or run Execute Anonymous:
-
-```apex
-String cronExp = '0 0 8 * * ?';
-System.schedule('Loan Payment Reminder Daily 8AM', cronExp, new LoanPaymentReminderJob());
-```
 
 ![chatuml-diagram](https://github.com/user-attachments/assets/a622f19b-b968-419a-8efa-d1bfe2512384)
