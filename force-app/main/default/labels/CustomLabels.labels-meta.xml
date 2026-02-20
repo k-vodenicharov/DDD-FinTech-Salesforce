@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>Loan_Doc_Alert_Fallback_Email</fullName>
+        <categories>Loan</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Fallback email for missing loan document alerts</shortDescription>
+        <value>loan-ops-alerts@example.com</value>
+    </labels>
+    <labels>
+        <fullName>Loan_Doc_Alert_Queue_DeveloperName</fullName>
+        <categories>Loan</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Queue developer name for missing loan document alerts</shortDescription>
+        <value>Loan_Operations</value>
+    </labels>
+</CustomLabels>
