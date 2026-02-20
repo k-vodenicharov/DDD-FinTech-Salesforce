@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Approved_Today</fullName>
+    <columns>NAME</columns>
+    <columns>Loan__c</columns>
+    <columns>Loan_Document__c</columns>
+    <columns>Action__c</columns>
+    <columns>Action_On__c</columns>
+    <columns>Actor__c</columns>
+    <columns>Details__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Action__c</field>
+        <operation>equals</operation>
+        <value>Approved</value>
+    </filters>
+    <filters>
+        <field>Action_On__c</field>
+        <operation>equals</operation>
+        <value>TODAY</value>
+    </filters>
+    <label>Approved Today</label>
+</ListView>

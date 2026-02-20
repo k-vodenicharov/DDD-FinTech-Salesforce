@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Proof of Address</label>
+    <protected>false</protected>
+    <values>
+        <field>Document_Type__c</field>
+        <value xsi:type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Proof of Address</value>
+    </values>
+    <values>
+        <field>Is_Required__c</field>
+        <value xsi:type="xsd:boolean" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">true</value>
+    </values>
+    <values>
+        <field>Applies_To_Loan_Type__c</field>
+        <value xsi:type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">Unsecured</value>
+    </values>
+    <values>
+        <field>Min_Amount__c</field>
+        <value xsi:type="xsd:double" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">20000.0</value>
+    </values>
+    <values>
+        <field>Due_Days_From_Created__c</field>
+        <value xsi:type="xsd:double" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">7.0</value>
+    </values>
+    <values>
+        <field>Allowed_Mime_Types__c</field>
+        <value xsi:type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">application/pdf,image/jpeg,image/png</value>
+    </values>
+    <values>
+        <field>Max_Size_MB__c</field>
+        <value xsi:type="xsd:double" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">8.0</value>
+    </values>
+</CustomMetadata>

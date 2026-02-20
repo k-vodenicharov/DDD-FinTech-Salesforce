@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Blocked_By_Scan</fullName>
+    <booleanFilter>1 AND (2 OR 3)</booleanFilter>
+    <columns>NAME</columns>
+    <columns>Loan__c</columns>
+    <columns>Document_Type__c</columns>
+    <columns>Status__c</columns>
+    <columns>Scan_Status__c</columns>
+    <columns>Scanned_On__c</columns>
+    <columns>Reviewed_By__c</columns>
+    <columns>SLA_State__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Is_Latest__c</field>
+        <operation>equals</operation>
+        <value>1</value>
+    </filters>
+    <filters>
+        <field>Scan_Status__c</field>
+        <operation>equals</operation>
+        <value>Infected</value>
+    </filters>
+    <filters>
+        <field>Scan_Status__c</field>
+        <operation>equals</operation>
+        <value>Failed</value>
+    </filters>
+    <label>Blocked By Scan</label>
+</ListView>

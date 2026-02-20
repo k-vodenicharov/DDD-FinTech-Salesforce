@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pending_Review_24h</fullName>
+    <columns>NAME</columns>
+    <columns>Loan__c</columns>
+    <columns>Document_Type__c</columns>
+    <columns>Status__c</columns>
+    <columns>Uploaded_On__c</columns>
+    <columns>Uploaded_By__c</columns>
+    <columns>Due_On__c</columns>
+    <columns>SLA_State__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Status__c</field>
+        <operation>equals</operation>
+        <value>Under_Review</value>
+    </filters>
+    <filters>
+        <field>Uploaded_On__c</field>
+        <operation>lessThan</operation>
+        <value>TODAY</value>
+    </filters>
+    <label>Pending Review 24h+</label>
+</ListView>

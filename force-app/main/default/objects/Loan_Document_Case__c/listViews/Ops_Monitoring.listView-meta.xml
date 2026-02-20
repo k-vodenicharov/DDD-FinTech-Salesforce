@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Ops_Monitoring</fullName>
+    <booleanFilter>1 OR 2 OR 3</booleanFilter>
+    <columns>NAME</columns>
+    <columns>Loan__c</columns>
+    <columns>Status__c</columns>
+    <columns>Required_Count__c</columns>
+    <columns>Approved_Count__c</columns>
+    <columns>Missing_Count__c</columns>
+    <columns>Awaiting_Review_Count__c</columns>
+    <columns>First_Missing_On__c</columns>
+    <columns>Last_Action_On__c</columns>
+    <columns>Next_Alert_On__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>Status__c</field>
+        <operation>equals</operation>
+        <value>Open</value>
+    </filters>
+    <filters>
+        <field>Status__c</field>
+        <operation>equals</operation>
+        <value>In_Review</value>
+    </filters>
+    <filters>
+        <field>Status__c</field>
+        <operation>equals</operation>
+        <value>Escalated</value>
+    </filters>
+    <label>Ops Monitoring</label>
+</ListView>
