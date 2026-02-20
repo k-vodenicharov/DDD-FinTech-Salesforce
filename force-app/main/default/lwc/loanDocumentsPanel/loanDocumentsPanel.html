@@ -1,0 +1,289 @@
+<template>
+    <lightning-card title="Loan Documentation" icon-name="doctype:attachment">
+        <div class="slds-p-around_medium doc-shell">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading loan documents" size="small"></lightning-spinner>
+            </template>
+
+            <div class="summary-header slds-m-bottom_medium">
+                <div class="summary-left">
+                    <p class="summary-title">Documentation Workflow</p>
+                    <p class="summary-subtitle">{nextActionText}</p>
+                    <lightning-progress-bar value={progressPercent}></lightning-progress-bar>
+                    <p class="summary-meta">{requiredApproved} of {requiredTotal} required docs approved ({progressPercent}%)</p>
+                </div>
+                <div class="summary-right">
+                    <span class={summaryVariantClass}>{summaryBadgeLabel}</span>
+                </div>
+            </div>
+
+            <div class="modern-toolbar slds-m-bottom_medium">
+                <div class="filter-row">
+                    <template for:each={filterPills} for:item="f">
+                        <button key={f.key} class={f.className} data-filter={f.key} onclick={handleFilterClick}>{f.label}</button>
+                    </template>
+                </div>
+                <div class="search-row">
+                    <lightning-input type="search" variant="label-hidden" placeholder="Search document, file or user" onchange={handleSearchChange}></lightning-input>
+                </div>
+            </div>
+
+            <div class="neo-grid">
+                <aside class="neo-panel neo-left">
+                    <div class="neo-panel-title">Loan Documents</div>
+                    <div class="neo-doc-list">
+                        <template if:true={hasDisplayRows}>
+                            <template for:each={displayRowsForList} for:item="row">
+                                <button key={row.id} class={row.listItemClass} data-rowid={row.id} onclick={handleSelectRow}>
+                                    <span class="neo-doc-left">
+                                        <lightning-icon icon-name={row.iconName} size="x-small" class="neo-doc-icon"></lightning-icon>
+                                        <span class="neo-doc-name">{row.documentType}</span>
+                                    </span>
+                                    <span class="neo-doc-right">
+                                        <span class={row.statusBadgeClass}>{row.statusBadgeLabel}</span>
+                                    </span>
+                                </button>
+                            </template>
+                        </template>
+                        <template if:false={hasDisplayRows}>
+                            <p class="empty-state">{emptyStateMessage}</p>
+                        </template>
+                    </div>
+                </aside>
+
+                <section class="neo-panel neo-center">
+                    <template if:true={hasSelectedRow}>
+                        <div class="neo-top-actions">
+                            <template for:each={primaryActions} for:item="actionItem">
+                                <lightning-button
+                                    key={actionItem.value}
+                                    data-action={actionItem.value}
+                                    data-rowid={selectedRow.id}
+                                    label={actionItem.label}
+                                    variant={actionItem.variant}
+                                    disabled={actionItem.disabled}
+                                    onclick={handleManualAction}>
+                                </lightning-button>
+                            </template>
+                            <template if:true={hasOverflowActions}>
+                                <lightning-button-menu alternative-text="More actions" onselect={handleOverflowSelect}>
+                                    <template for:each={overflowActions} for:item="menuAction">
+                                        <lightning-menu-item
+                                            key={menuAction.value}
+                                            value={menuAction.value}
+                                            label={menuAction.label}
+                                            disabled={menuAction.disabled}>
+                                        </lightning-menu-item>
+                                    </template>
+                                </lightning-button-menu>
+                            </template>
+                        </div>
+
+                        <div class="neo-preview">
+                            <div class="neo-preview-head">
+                                <span class="neo-doc-type">{selectedRow.documentType}</span>
+                                <span class={selectedRowStatusClass}>{selectedRowStatusLabel}</span>
+                            </div>
+                            <div class="neo-preview-body">
+                                <div class="neo-doc-frame-head">Current File</div>
+                                <div class="neo-doc-fileline">
+                                    <lightning-icon icon-name="doctype:attachment" size="x-small" class="neo-doc-frame-icon"></lightning-icon>
+                                    <div class="neo-doc-frame-name">{selectedRow.fileNameDisplay}</div>
+                                </div>
+                                <div class="doc-summary-grid">
+                                    <p class="doc-meta"><span class="doc-meta-label">Due</span><span>{selectedRow.summaryDueValue}</span></p>
+                                    <p class="doc-meta"><span class="doc-meta-label">Last Upload</span><span>{selectedRow.summaryUploadValue}</span></p>
+                                    <p class="doc-meta"><span class="doc-meta-label">Scan</span><span>{selectedRow.summaryScanValue}</span></p>
+                                    <p class="doc-meta"><span class="doc-meta-label">Authenticity</span><span>{selectedRow.summaryAuthenticityValue}</span></p>
+                                    <p class="doc-meta"><span class="doc-meta-label">Approval Gate</span><span>{selectedRow.summaryGateValue}</span></p>
+                                </div>
+                                <p class="doc-meta"><span class={selectedRow.slaBadgeClass}>{selectedRow.slaBadgeLabel}</span></p>
+                                <p class="doc-meta doc-guidance">{selectedRow.statusGuidanceText}</p>
+                                <template if:true={selectedRow.primaryAlertText}>
+                                    <p class={selectedRow.primaryAlertClass}>{selectedRow.primaryAlertText}</p>
+                                </template>
+                                <template if:true={hasClarificationDetails}>
+                                    <div class="clarification-detail-box">
+                                        <p class="clarification-detail-title">Clarification Details</p>
+                                        <p class="doc-meta clarification-detail-text">{clarificationMessageText}</p>
+                                        <p class="doc-meta">
+                                            <span class="doc-meta-label">Requested By</span><span>{clarificationRequestedByText}</span>
+                                        </p>
+                                        <p class="doc-meta">
+                                            <span class="doc-meta-label">Requested On</span><span>{clarificationRequestedOnText}</span>
+                                        </p>
+                                        <p class="doc-meta">
+                                            <span class="doc-meta-label">SLA</span><span class={selectedRow.slaBadgeClass}>{selectedRow.slaBadgeLabel}</span>
+                                        </p>
+                                        <template if:true={showClarificationReuploadAction}>
+                                            <div class="slds-m-top_x-small">
+                                                <lightning-button variant="brand" label="Re-upload for Clarification" onclick={handleClarificationReupload}></lightning-button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                                <template if:true={hasRejectedNote}>
+                                    <p class="doc-meta doc-reject-note">Rejection reason: {displayedRejectedNote}</p>
+                                    <template if:true={hasLongRejectedNote}>
+                                        <lightning-button variant="base" label={rejectionToggleLabel} onclick={handleToggleRejectionNote}></lightning-button>
+                                    </template>
+                                </template>
+                                <p class="doc-meta">{selectedRow.policyHintText}</p>
+                            </div>
+                            <div class="neo-preview-actions">
+                                <template if:true={showInlineUpload}>
+                                    <div class="neo-action-row neo-action-row-upload">
+                                        <lightning-file-upload
+                                            data-document-type={selectedRow.documentType}
+                                            label={selectedRow.uploadLabel}
+                                            name="rowUpload"
+                                            record-id={recordId}
+                                            accept={selectedRow.acceptedFormats}
+                                            onuploadfinished={handleRowUploadFinished}
+                                            disabled={isLoading}>
+                                        </lightning-file-upload>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                    <template if:false={hasSelectedRow}>
+                        <p class="empty-state empty-state-center">{emptyStateMessage}</p>
+                    </template>
+                </section>
+
+                <aside class="neo-panel neo-right">
+                    <template if:true={hasClarificationInboxRows}>
+                        <div class="neo-clarify-box slds-m-bottom_small">
+                            <p class="neo-panel-title">Clarification Inbox</p>
+                            <template for:each={clarificationInboxRows} for:item="row">
+                                <article key={row.id} class="clarify-item">
+                                    <p class="clarify-head">{row.documentType}</p>
+                                    <p class="clarify-text">{row.clarificationText}</p>
+                                    <p class="clarify-sla">{row.slaText}</p>
+                                    <lightning-button
+                                        label="Fix Now"
+                                        data-rowid={row.id}
+                                        size="small"
+                                        variant="brand"
+                                        onclick={handleFixNow}>
+                                    </lightning-button>
+                                </article>
+                            </template>
+                        </div>
+                    </template>
+                    <template if:true={showOpsSlaWorkbench}>
+                        <div class="neo-workbench slds-m-bottom_small">
+                            <p class="neo-panel-title">SLA Workbench</p>
+                            <div class="workbench-grid">
+                                <p class="workbench-stat"><span>Pending Review</span><strong>{opsWorkloadPendingReview}</strong></p>
+                                <p class="workbench-stat"><span>Needs Clarification</span><strong>{opsWorkloadNeedsClarification}</strong></p>
+                                <p class="workbench-stat"><span>Rejected</span><strong>{opsWorkloadRejected}</strong></p>
+                                <p class="workbench-stat"><span>Blocked By Scan</span><strong>{opsWorkloadBlockedByScan}</strong></p>
+                            </div>
+                            <p class="doc-meta"><span class="doc-meta-label">Queue Total</span><span>{opsWorkloadTotal}</span></p>
+                            <p class="doc-meta"><span class="doc-meta-label">Oldest Pending</span><span>{opsOldestPendingText}</span></p>
+                            <template if:true={hasSelectedRow}>
+                                <p class="doc-meta"><span class="doc-meta-label">Breach Risk</span><span class={selectedBreachRiskClass}>{selectedBreachRisk}</span></p>
+                                <p class="doc-meta">{selectedPriorityHintText}</p>
+                            </template>
+                        </div>
+                    </template>
+                    <div class="neo-panel-title">Activity & Audit Trail</div>
+                    <template if:true={hasClarificationHistory}>
+                        <div class="clarification-thread slds-m-bottom_small">
+                            <p class="clarification-thread-title">Clarification Thread</p>
+                            <template for:each={selectedClarificationHistory} for:item="entry">
+                                <article key={entry.id} class="clarification-thread-item">
+                                    <p class="clarification-thread-head">
+                                        <span>{entry.actionLabel}</span>
+                                        <span class="clarification-thread-time">{entry.actionOnLabel}</span>
+                                    </p>
+                                    <p class="clarification-thread-meta">by {entry.actorName}</p>
+                                    <template if:true={entry.details}>
+                                        <p class="clarification-thread-details">{entry.details}</p>
+                                    </template>
+                                </article>
+                            </template>
+                        </div>
+                    </template>
+                    <template if:true={showAuditTimelineToggle}>
+                        <div class="timeline-toggle-row">
+                            <lightning-button variant="base" label={timelineToggleLabel} onclick={toggleTimeline}></lightning-button>
+                        </div>
+                        <template if:false={isTimelineCollapsed}>
+                            <div class="timeline-box">
+                                <template if:true={hasActivityTimeline}>
+                                    <template for:each={shortTimeline} for:item="entry">
+                                        <article key={entry.id} class="timeline-item slds-m-bottom_x-small">
+                                            <p class="timeline-head">
+                                                <span class="timeline-action">{entry.actionLabel}</span>
+                                                <template if:true={entry.documentType}>
+                                                    <span class="timeline-doc-type">{entry.documentType}</span>
+                                                </template>
+                                            </p>
+                                            <p class="timeline-meta">
+                                                {entry.actionOnLabel}
+                                                <span class="slds-m-left_x-small">by {entry.actorName}</span>
+                                            </p>
+                                            <template if:true={entry.summary}>
+                                                <p class="slds-text-body_small slds-text-color_weak">{entry.summary}</p>
+                                            </template>
+                                        </article>
+                                    </template>
+                                </template>
+                                <template if:false={hasActivityTimeline}>
+                                    <p class="slds-text-body_small slds-text-color_weak">No document activity yet.</p>
+                                </template>
+                            </div>
+                        </template>
+                        <template if:true={isTimelineCollapsed}>
+                            <p class="slds-text-body_small slds-text-color_weak">Timeline hidden to keep focus on review actions.</p>
+                        </template>
+                    </template>
+                    <div class="neo-task-box">
+                        <p class="neo-panel-title">Task List</p>
+                        <p class="slds-text-body_small">{taskSummaryText}</p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </lightning-card>
+
+    <template if:true={isRejectModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">Reject Document</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-textarea label="Rejection Reason" value={rejectReason} onchange={handleRejectReasonChange} required></lightning-textarea>
+                    <lightning-textarea class="slds-m-top_small" label="Ops Comments" value={rejectComments} onchange={handleRejectCommentsChange}></lightning-textarea>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" onclick={closeRejectModal}></lightning-button>
+                    <lightning-button variant="brand" class="slds-m-left_small" label="Reject" onclick={confirmReject}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={isClarifyModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">Request Clarification</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-textarea label="Clarification Reason" value={clarifyReason} onchange={handleClarifyReasonChange} required></lightning-textarea>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button label="Cancel" onclick={closeClarifyModal}></lightning-button>
+                    <lightning-button variant="brand" class="slds-m-left_small" label="Request Clarification" onclick={confirmClarify}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
