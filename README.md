@@ -74,9 +74,9 @@ This repository contains a Salesforce implementation for managing loan applicati
 - Follows DDD principles with business logic in Domain layer and orchestration in Service layer
 - Trigger-based detection with proper recursion guards and bulk safety
 
-### 11. Loan Documentation Upload and Tracking v2
+### 10. Loan Documentation Upload and Tracking v2
 - New operational object `Loan_Document__c` tracks lifecycle per Loan + Document Type
-- Lifecycle statuses: `Required`, `Uploaded`, `Under_Review`, `Approved`, `Rejected`, `Expired`
+- Lifecycle statuses: `Required`, `Uploaded`, `Under_Review`, `Needs_Clarification`, `Approved`, `Rejected`, `Expired`
 - Upload handling uses `ContentDocumentLink` trigger delegation to sync lifecycle records
 - Replacement uploads preserve history and enforce latest semantics (`Is_Latest__c`)
 - Required documents resolved dynamically from `Loan_Document_Requirement__mdt` using loan type, status, and amount thresholds
@@ -86,7 +86,7 @@ This repository contains a Salesforce implementation for managing loan applicati
 - SLA Workbench added for ops: queue workload counts, blocked-by-scan count, oldest pending document hint, and breach risk indicator
 - Loan document case routing added: per-loan `Loan_Document_Case__c` summary now syncs status/counts/alert snapshot and routes open cases to the configured ops queue
 - Escalation scheduler sends reminders, updates alert level/SLA, and creates one queue task per loan
-- Upgraded `loanDocumentsPanel` provides checklist table, progress summary, filters, preview/download/replace actions, and ops-only approve/reject
+- Upgraded `loanDocumentsPanel` provides checklist workspace, progress summary, filters, preview/download/replace actions, and ops-only approve/reject
 
 ## Data Model
 
@@ -334,33 +334,57 @@ job.execute(null);
    - Loan status remains consistent throughout the process
 
 ### `Test 11:` Loan Documentation Upload and Tracking v2
-1. Open a Loan record page with `loanDocumentsPanel` added
-2. Verify required checklist, progress bar, and summary badge render
-3. Upload a file for a selected type and verify status becomes `Under_Review`
-4. Upload another file of the same type and verify latest semantics in UI and `Loan_Document__c`
-5. As an ops user (`Loan_Document_Ops`), approve the document and verify status `Approved`
-6. Reject a document and verify reason is required and persisted
-7. Verify approval gate with authenticity:
-   - set scan to `Clean` but leave authenticity not verified and confirm approve is blocked
-   - set authenticity to `Verified` and confirm approve succeeds
-8. Verify suspicious authenticity:
-   - set authenticity to `Suspected Fraud`
-   - verify approval gate shows blocked state and approve is blocked
-9. Verify dynamic requirement example:
-   - For Unsecured loans with amount > configured threshold, `Proof of Address` appears as required
-10. Execute escalation job and verify:
-   - reminder email dispatch
-   - exactly one open task with subject `Missing required loan documents`
-   - `Alert_Level__c` increments and `Next_Alert_On__c` is advanced
-11. Verify SLA Workbench (ops view):
-   - right panel shows queue counts for `Pending Review`, `Needs Clarification`, `Rejected`, and `Blocked By Scan`
-   - breach risk indicator changes based on due date proximity
-   - oldest pending document hint is displayed for prioritization
-12. Verify loan document case routing summary:
-   - open `Loan Document Cases` tab and confirm the loan has one case row
-   - confirm `Missing/Approved/Awaiting` counters match panel state
-   - confirm status transitions (`Open` -> `In Review` -> `Complete`) as docs are uploaded/reviewed
-   - if queue label is configured and queue exists, confirm open/in-review cases are assigned to that queue
+1. **Setup and access**
+   - Create/open a Loan record.
+   - Ensure Borrower has `Fin_Tech_User`.
+   - Ensure Ops user has both `Fin_Tech_User` and `Loan_Document_Ops`.
+   - Open Loan -> `Loan Documentation` tab and confirm `loanDocumentsPanel` renders.
+2. **Borrower flow: initial upload**
+   - Log in as Borrower.
+   - In required list, upload one required document (for example `Government ID`).
+   - Verify status becomes `Under Review`.
+   - Verify progress updates and file actions (`Preview`, `Download`, `Replace`) are visible.
+3. **Borrower flow: replacement semantics**
+   - Replace the same document type with a new file.
+   - Verify panel shows only latest file for that type.
+   - Verify history/audit still tracks prior activity.
+4. **Ops flow: approval gate enforcement**
+   - Log in as Ops (`Loan_Document_Ops`).
+   - Open same loan/document.
+   - Try approve before scan/authenticity requirements are met and verify approval is blocked.
+   - Set scan to `Clean` only; verify approval still blocked.
+   - Set authenticity to `Verified`; verify approval now succeeds.
+   - Confirm status becomes `Approved`.
+5. **Ops flow: reject and clarification**
+   - Reject another document and verify reason is mandatory and persisted.
+   - Request clarification and verify borrower sees clarification message/inbox with action to re-upload.
+   - Borrower uploads replacement and verify status returns to `Under Review`.
+6. **Fraud/safety path**
+   - As Ops, set authenticity to `Suspected Fraud`.
+   - Verify approval gate remains blocked and approve action is not allowed.
+7. **Dynamic requirements**
+   - Use an Unsecured loan above configured threshold.
+   - Verify `Proof of Address` appears as required from `Loan_Document_Requirement__mdt`.
+8. **Escalation job behavior**
+   - Leave at least one required document missing.
+   - Run `LoanDocumentEscalationJob`.
+   - Verify reminder email path is used (queue members and/or fallback email).
+   - Verify exactly one open task exists with subject `Missing required loan documents`.
+   - Verify `Alert_Level__c` increments and `Next_Alert_On__c` moves forward.
+9. **Ops SLA Workbench**
+   - In ops view, verify workload counters for:
+     - `Pending Review`
+     - `Needs Clarification`
+     - `Rejected`
+     - `Blocked By Scan`
+   - Verify breach risk indicator changes by due-date proximity.
+   - Verify oldest pending hint is displayed.
+10. **Case routing and summary sync**
+   - Open `Loan Document Cases` tab.
+   - Confirm one case row per loan.
+   - Confirm `Missing/Approved/Awaiting` counters match panel.
+   - Confirm status transitions (`Open` -> `In Review` -> `Complete`) as documents progress.
+   - If queue label is configured and queue exists, confirm open/in-review cases are assigned to that queue.
 
 ### `Test 12:` Loan Documentation Ops Reporting Views
 1. Open tab `Loan Documents` and verify list views:
@@ -412,7 +436,7 @@ Follow these steps after deployment so a fresh org looks like the reference demo
    - Setup -> Permission Sets -> `Loan Document Ops` -> assign to operations users.
 8. Record page source-of-truth in this repo:
    - Account uses `Account_Record_Page1` (Large and Small form factors).
-   - Loan uses `Loan_Record_Page` via `Loan__c` object action override.
+   - Loan pages (`Loan_Record_Page`, `Loan_Record_Page_Borrower`, `Loan_Record_Page_Ops`, `Loan_Record_Page_Admin`) are included in metadata and should be activated in Lightning App Builder for the target app/profiles.
    - Keep loan operational internals (`Loan Document`, `Loan Document Audit`, `Loan Document Case`) in the `Loan Documentation` tab and ops object tabs, not in the standard Loan `Related` tab.
 
 ### Schedule Payment Reminders (Recommended)
