@@ -15,6 +15,9 @@
     <tabs>standard-Account</tabs>
     <tabs>standard-Contact</tabs>
     <tabs>Loan__c</tabs>
+    <tabs>Loan_Document__c</tabs>
+    <tabs>Loan_Document_Case__c</tabs>
+    <tabs>Loan_Document_Audit__c</tabs>
     <tabs>Payment_Plan__c</tabs>
     <tabs>Transaction__c</tabs>
     <tabs>Investment__c</tabs>
