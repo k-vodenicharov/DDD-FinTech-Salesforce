@@ -8,6 +8,7 @@
     <types>
         <name>LightningComponentBundle</name>
         <members>accountLoansContainer</members>
+        <members>loanDocumentsPanel</members>
         <members>loanForm</members>
         <members>prepayLoanAction</members>
     </types>
@@ -19,14 +20,33 @@
         <members>Investment_Portfolio__c</members>
         <members>KYC_Verification__c</members>
         <members>Loan__c</members>
+        <members>Loan_Document__c</members>
+        <members>Loan_Document_Audit__c</members>
+        <members>Loan_Document_Case__c</members>
         <members>Payment_Plan__c</members>
         <members>Regulatory_Report__c</members>
         <members>Transaction__c</members>
     </types>
 
     <types>
+        <name>ListView</name>
+        <members>Loan_Document__c.All</members>
+        <members>Loan_Document__c.Blocked_By_Scan</members>
+        <members>Loan_Document__c.Overdue_Clarifications</members>
+        <members>Loan_Document__c.Pending_Review_24h</members>
+        <members>Loan_Document_Audit__c.All</members>
+        <members>Loan_Document_Audit__c.Approved_Today</members>
+        <members>Loan_Document_Case__c.All</members>
+        <members>Loan_Document_Case__c.Ops_Monitoring</members>
+    </types>
+
+    <types>
         <name>FlexiPage</name>
-        <members>Account_Record_Page</members>
+        <members>Account_Record_Page1</members>
+        <members>Loan_Record_Page_Admin</members>
+        <members>Loan_Record_Page_Borrower</members>
+        <members>Loan_Record_Page_Ops</members>
+        <members>Loan_Record_Page</members>
     </types>
 
     <types>
@@ -76,7 +96,12 @@
 
     <types>
         <name>CustomObject</name>
+        <members>Account</members>
         <members>Loan__c</members>
+        <members>Loan_Document_Audit__c</members>
+        <members>Loan_Document_Case__c</members>
+        <members>Loan_Document_Requirement__mdt</members>
+        <members>Loan_Document__c</members>
         <members>Payment_Plan__c</members>
         <members>Transaction__c</members>
         <members>Investment__c</members>
@@ -91,19 +116,30 @@
         <name>ApexClass</name>
         <members>AdjustmentContext</members>
         <members>BeforePaymentPlanUpdateHandler</members>
+        <members>ContentDocumentLinkTriggerHandler</members>
         <members>EmailService</members>
         <members>ILoanRepository</members>
+        <members>ILoanDocumentRepository</members>
         <members>IPaymentPlanRepository</members>
         <members>LoggingService</members>
+        <members>LoanDocumentCommandService</members>
+        <members>LoanDocumentController</members>
+        <members>LoanDocumentEscalationJob</members>
+        <members>LoanDocumentQueryService</members>
+        <members>LoanDocumentRepository</members>
+        <members>LoanDocumentSelector</members>
+        <members>LoanDocumentationDomain</members>
         <members>LoanCommandService</members>
         <members>LoanController</members>
         <members>LoanDomain</members>
         <members>LoanEventConsumer</members>
         <members>LoanEventPublisher</members>
+        <members>LoanMissingDocumentAlertJob</members>
         <members>LoanPaymentReminderJob</members>
         <members>LoanQueueable</members>
         <members>LoanQueryService</members>
         <members>LoanRestController</members>
+        <members>LoanDocumentationTests</members>
         <members>LoanRestructuringTest</members>
         <members>LoanSelector</members>
         <members>LoanStatusContext</members>
@@ -127,9 +163,41 @@
 
     <types>
         <name>ApexTrigger</name>
+        <members>ContentDocumentLinkTrigger</members>
         <members>LoanEventTrigger</members>
         <members>PaymentPlanTrigger</members>
         <members>LoanTrigger</members>
+    </types>
+
+    <types>
+        <name>CustomField</name>
+        <members>ContentVersion.Document_Type__c</members>
+        <members>Loan_Document_Audit__c.Action__c</members>
+        <members>Loan_Document__c.Authenticity_Checked_On__c</members>
+        <members>Loan_Document__c.Authenticity_Reference__c</members>
+        <members>Loan_Document__c.Authenticity_Score__c</members>
+        <members>Loan_Document__c.Authenticity_Status__c</members>
+        <members>Loan_Document__c.Scan_Status__c</members>
+        <members>Loan_Document__c.Scan_Reference__c</members>
+        <members>Loan_Document__c.Scanned_On__c</members>
+    </types>
+
+    <types>
+        <name>CustomMetadata</name>
+        <members>Loan_Document_Requirement__mdt.Government_ID</members>
+        <members>Loan_Document_Requirement__mdt.Proof_of_Address</members>
+        <members>Loan_Document_Requirement__mdt.Proof_of_Income</members>
+        <members>Loan_Document_Requirement__mdt.Signed_Loan_Agreement</members>
+    </types>
+
+    <types>
+        <name>CustomPermission</name>
+        <members>Loan_Document_Ops</members>
+    </types>
+
+    <types>
+        <name>CustomLabel</name>
+        <members>*</members>
     </types>
 
     <types>

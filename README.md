@@ -74,6 +74,20 @@ This repository contains a Salesforce implementation for managing loan applicati
 - Follows DDD principles with business logic in Domain layer and orchestration in Service layer
 - Trigger-based detection with proper recursion guards and bulk safety
 
+### 11. Loan Documentation Upload and Tracking v2
+- New operational object `Loan_Document__c` tracks lifecycle per Loan + Document Type
+- Lifecycle statuses: `Required`, `Uploaded`, `Under_Review`, `Approved`, `Rejected`, `Expired`
+- Upload handling uses `ContentDocumentLink` trigger delegation to sync lifecycle records
+- Replacement uploads preserve history and enforce latest semantics (`Is_Latest__c`)
+- Required documents resolved dynamically from `Loan_Document_Requirement__mdt` using loan type, status, and amount thresholds
+- Completeness is based on `Approved` required documents (not only uploaded files)
+- Authenticity workflow added: ops sets authenticity (`Pending`, `Verified`, `Needs Review`, `Suspected Fraud`) with optional score/reference
+- Approval gate now requires both `Scan_Status__c = Clean` and `Authenticity_Status__c = Verified`
+- SLA Workbench added for ops: queue workload counts, blocked-by-scan count, oldest pending document hint, and breach risk indicator
+- Loan document case routing added: per-loan `Loan_Document_Case__c` summary now syncs status/counts/alert snapshot and routes open cases to the configured ops queue
+- Escalation scheduler sends reminders, updates alert level/SLA, and creates one queue task per loan
+- Upgraded `loanDocumentsPanel` provides checklist table, progress summary, filters, preview/download/replace actions, and ops-only approve/reject
+
 ## Data Model
 
 ### Loan__c Object
@@ -90,6 +104,20 @@ This repository contains a Salesforce implementation for managing loan applicati
 - Payment_Deadline__c - Date
 - Payment_Amount__c - Currency
 - Loan__c - Master-detail relationship with the loan object
+
+### Loan_Document__c Object
+- Loan__c - Lookup(Loan__c)
+- Document_Type__c - Picklist
+- Status__c - Picklist (`Required`, `Uploaded`, `Under_Review`, `Approved`, `Rejected`, `Expired`)
+- Uploaded_By__c / Uploaded_On__c - Audit of upload
+- Reviewed_By__c / Reviewed_On__c - Ops review audit
+- Rejection_Reason__c / Ops_Comments__c - Ops review notes
+- Is_Latest__c - Tracks latest record per Loan + Document Type
+- Due_On__c / SLA_State__c - SLA tracking
+- Alert_Level__c / Next_Alert_On__c - Reminder/escalation scheduling state
+- Content_Document_Id__c - Linked Salesforce File reference for UI actions
+- Scan_Status__c / Scan_Reference__c / Scanned_On__c - Malware/scan controls for ops
+- Authenticity_Status__c / Authenticity_Score__c / Authenticity_Reference__c / Authenticity_Checked_On__c - Authenticity controls for ops review
 
 ## Architecture
 
@@ -305,6 +333,50 @@ job.execute(null);
    - No double recalculation occurs
    - Loan status remains consistent throughout the process
 
+### `Test 11:` Loan Documentation Upload and Tracking v2
+1. Open a Loan record page with `loanDocumentsPanel` added
+2. Verify required checklist, progress bar, and summary badge render
+3. Upload a file for a selected type and verify status becomes `Under_Review`
+4. Upload another file of the same type and verify latest semantics in UI and `Loan_Document__c`
+5. As an ops user (`Loan_Document_Ops`), approve the document and verify status `Approved`
+6. Reject a document and verify reason is required and persisted
+7. Verify approval gate with authenticity:
+   - set scan to `Clean` but leave authenticity not verified and confirm approve is blocked
+   - set authenticity to `Verified` and confirm approve succeeds
+8. Verify suspicious authenticity:
+   - set authenticity to `Suspected Fraud`
+   - verify approval gate shows blocked state and approve is blocked
+9. Verify dynamic requirement example:
+   - For Unsecured loans with amount > configured threshold, `Proof of Address` appears as required
+10. Execute escalation job and verify:
+   - reminder email dispatch
+   - exactly one open task with subject `Missing required loan documents`
+   - `Alert_Level__c` increments and `Next_Alert_On__c` is advanced
+11. Verify SLA Workbench (ops view):
+   - right panel shows queue counts for `Pending Review`, `Needs Clarification`, `Rejected`, and `Blocked By Scan`
+   - breach risk indicator changes based on due date proximity
+   - oldest pending document hint is displayed for prioritization
+12. Verify loan document case routing summary:
+   - open `Loan Document Cases` tab and confirm the loan has one case row
+   - confirm `Missing/Approved/Awaiting` counters match panel state
+   - confirm status transitions (`Open` -> `In Review` -> `Complete`) as docs are uploaded/reviewed
+   - if queue label is configured and queue exists, confirm open/in-review cases are assigned to that queue
+
+### `Test 12:` Loan Documentation Ops Reporting Views
+1. Open tab `Loan Documents` and verify list views:
+   - `Overdue Clarifications`
+   - `Blocked By Scan`
+   - `Pending Review 24h+`
+2. Open tab `Loan Document Cases` and verify list view:
+   - `Ops Monitoring`
+3. Open tab `Loan Document Audits` and verify list view:
+   - `Approved Today`
+4. Validate expected records:
+   - `Overdue Clarifications`: status `Needs_Clarification` with due date before today
+   - `Blocked By Scan`: latest docs with scan status `Infected` or `Failed`
+   - `Pending Review 24h+`: docs still `Under_Review` uploaded before today
+   - `Approved Today`: audit action `Approved` with action date today
+
 
 ## Future Enhancements
 
@@ -334,6 +406,14 @@ Follow these steps after deployment so a fresh org looks like the reference demo
 5. Ensure the Prepay Loan action is available on Loan records:
    - Object Manager -> Loan__c -> Page Layouts -> add Quick Action `Prepay Loan` to the actions bar.
    - If you use a custom Lightning Record Page for Loan, add the action to its Highlights Panel.
+6. Ensure Loan document panel is available on Loan records:
+   - Lightning App Builder -> Loan Record Page -> add `loanDocumentsPanel`.
+7. Assign the ops permission set for review actions when needed:
+   - Setup -> Permission Sets -> `Loan Document Ops` -> assign to operations users.
+8. Record page source-of-truth in this repo:
+   - Account uses `Account_Record_Page1` (Large and Small form factors).
+   - Loan uses `Loan_Record_Page` via `Loan__c` object action override.
+   - Keep loan operational internals (`Loan Document`, `Loan Document Audit`, `Loan Document Case`) in the `Loan Documentation` tab and ops object tabs, not in the standard Loan `Related` tab.
 
 ### Schedule Payment Reminders (Recommended)
 Scheduling is org-specific, so the recommended approach is to schedule `LoanPaymentReminderJob` after deployment.
@@ -343,6 +423,14 @@ You can schedule from **Setup -> Apex Classes -> Schedule Apex** or run Execute 
 ```apex
 String cronExp = '0 0 8 * * ?';
 System.schedule('Loan Payment Reminder Daily 8AM', cronExp, new LoanPaymentReminderJob());
+```
+
+### Schedule Loan Document Escalation (Recommended)
+Schedule `LoanDocumentEscalationJob` to enforce the 24h reminder cadence and escalation workflow.
+
+```apex
+String cronDocs = '0 0 9 * * ?';
+System.schedule('Loan Document Escalation Daily 9AM', cronDocs, new LoanDocumentEscalationJob());
 ```
 
 ![chatuml-diagram](https://github.com/user-attachments/assets/a622f19b-b968-419a-8efa-d1bfe2512384)
