@@ -114,6 +114,9 @@ public with sharing class LoanDocumentQueryService {
         dto.opsOldestPendingUploadedOn = null;
         dto.opsOldestPendingAgeDays = null;
         if (loanId == null) return dto;
+        if (!dto.isAdmin && (!Schema.sObjectType.Loan__c.isAccessible() || !Schema.sObjectType.Loan_Document__c.isAccessible())) {
+            return dto;
+        }
 
         List<Loan__c> loans = LoanDocumentSelector.getLoansByIds(new Set<Id>{loanId});
         if (loans.isEmpty()) return dto;
@@ -203,30 +206,34 @@ public with sharing class LoanDocumentQueryService {
         dto.progressPercent = dto.requiredTotal == 0 ? 100 :
             Integer.valueOf(Math.floor((Decimal.valueOf(dto.requiredApproved) / Decimal.valueOf(dto.requiredTotal)) * 100));
 
-        for (Loan_Document_Audit__c row : LoanDocumentSelector.getAuditByLoanId(loanId, 15)) {
-            AuditItem item = new AuditItem();
-            item.action = row.Action__c;
-            item.actionLabel = toActionLabel(row.Action__c);
-            item.documentType = row.Loan_Document__r == null ? null : row.Loan_Document__r.Document_Type__c;
-            item.fromStatus = toStatusLabel(row.Prior_Status__c);
-            item.toStatus = toStatusLabel(row.New_Status__c);
-            item.actionOn = row.Action_On__c;
-            item.actorName = row.Actor__r == null ? null : row.Actor__r.Name;
-            item.details = row.Details__c;
-            item.summary = buildAuditSummary(item);
-            if (shouldIncludeAuditItem(item, dto.canSeeAuditTrail)) {
-                if (!dto.canSeeAuditTrail) {
-                    item.actorName = null;
-                    item.details = sanitizeBorrowerAuditDetails(item);
-                    item.summary = buildAuditSummary(item);
+        if (dto.isAdmin || Schema.sObjectType.Loan_Document_Audit__c.isAccessible()) {
+            for (Loan_Document_Audit__c row : LoanDocumentSelector.getAuditByLoanId(loanId, 15)) {
+                AuditItem item = new AuditItem();
+                item.action = row.Action__c;
+                item.actionLabel = toActionLabel(row.Action__c);
+                item.documentType = row.Loan_Document__r == null ? null : row.Loan_Document__r.Document_Type__c;
+                item.fromStatus = toStatusLabel(row.Prior_Status__c);
+                item.toStatus = toStatusLabel(row.New_Status__c);
+                item.actionOn = row.Action_On__c;
+                item.actorName = row.Actor__r == null ? null : row.Actor__r.Name;
+                item.details = row.Details__c;
+                item.summary = buildAuditSummary(item);
+                if (shouldIncludeAuditItem(item, dto.canSeeAuditTrail)) {
+                    if (!dto.canSeeAuditTrail) {
+                        item.actorName = null;
+                        item.details = sanitizeBorrowerAuditDetails(item);
+                        item.summary = buildAuditSummary(item);
+                    }
+                    dto.activityTimeline.add(item);
                 }
-                dto.activityTimeline.add(item);
             }
         }
 
-        List<Task> openTasks = LoanDocumentSelector.getOpenMissingDocTasks(new Set<Id>{ loanId });
-        if (!openTasks.isEmpty()) {
-            dto.openTaskId = openTasks[0].Id;
+        if (dto.isAdmin || Schema.sObjectType.Task.isAccessible()) {
+            List<Task> openTasks = LoanDocumentSelector.getOpenMissingDocTasks(new Set<Id>{ loanId });
+            if (!openTasks.isEmpty()) {
+                dto.openTaskId = openTasks[0].Id;
+            }
         }
 
         if (dto.isOps) {

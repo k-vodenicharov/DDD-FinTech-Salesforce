@@ -83,6 +83,7 @@ This repository contains a Salesforce implementation for managing loan applicati
 - Completeness is based on `Approved` required documents (not only uploaded files)
 - Authenticity workflow added: ops sets authenticity (`Pending`, `Verified`, `Needs Review`, `Suspected Fraud`) with optional score/reference
 - Approval gate now requires both `Scan_Status__c = Clean` and `Authenticity_Status__c = Verified`
+- Controller/query security hardening added: panel read and review mutations enforce explicit object access in Apex (not UI-only)
 - SLA Workbench added for ops: queue workload counts, blocked-by-scan count, oldest pending document hint, and breach risk indicator
 - Loan document case routing added: per-loan `Loan_Document_Case__c` summary now syncs status/counts/alert snapshot and routes open cases to the configured ops queue
 - Escalation scheduler sends reminders, updates alert level/SLA, and creates one queue task per loan

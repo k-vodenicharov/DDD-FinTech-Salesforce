@@ -5,12 +5,14 @@ public with sharing class LoanDocumentController {
     private static Boolean cachedIsAdmin;
     @AuraEnabled(cacheable=true)
     public static List<String> getRequiredDocumentTypes(Id loanId) {
+        ensurePanelReadAccess();
         LoanDocumentQueryService queryService = new LoanDocumentQueryService();
         return queryService.getRequiredDocumentTypesForLoan(loanId);
     }
 
     @AuraEnabled
     public static LoanDocumentQueryService.LoanDocumentPanelDto getPanelData(Id loanId) {
+        ensurePanelReadAccess();
         LoanDocumentQueryService queryService = new LoanDocumentQueryService();
         return queryService.getPanelData(loanId);
     }
@@ -19,6 +21,7 @@ public with sharing class LoanDocumentController {
     public static ResponseWrapper assignDocumentType(Id loanId, List<Id> contentDocumentIds, String documentType) {
         ResponseWrapper response = new ResponseWrapper();
         try {
+            ensurePanelReadAccess();
             LoanDocumentCommandService commandService = new LoanDocumentCommandService();
             commandService.assignDocumentType(
                 loanId,
@@ -40,6 +43,7 @@ public with sharing class LoanDocumentController {
             if (!canReviewActions()) {
                 throw new AuraHandledException('You do not have access to review actions.');
             }
+            ensureLoanDocumentUpdateAccess();
             LoanDocumentCommandService commandService = new LoanDocumentCommandService();
             commandService.approveDocument(loanDocumentId, comments);
             response.isSuccess = true;
@@ -57,6 +61,7 @@ public with sharing class LoanDocumentController {
             if (!canReviewActions()) {
                 throw new AuraHandledException('You do not have access to review actions.');
             }
+            ensureLoanDocumentUpdateAccess();
             LoanDocumentCommandService commandService = new LoanDocumentCommandService();
             commandService.rejectDocument(loanDocumentId, rejectionReason, comments);
             response.isSuccess = true;
@@ -74,6 +79,7 @@ public with sharing class LoanDocumentController {
             if (!canReviewActions()) {
                 throw new AuraHandledException('You do not have access to review actions.');
             }
+            ensureLoanDocumentUpdateAccess();
             LoanDocumentCommandService commandService = new LoanDocumentCommandService();
             commandService.requestClarification(loanDocumentId, clarificationReason);
             response.isSuccess = true;
@@ -91,6 +97,7 @@ public with sharing class LoanDocumentController {
             if (!canReviewActions()) {
                 throw new AuraHandledException('You do not have access to scan update actions.');
             }
+            ensureLoanDocumentUpdateAccess();
             LoanDocumentCommandService commandService = new LoanDocumentCommandService();
             commandService.updateDocumentScanStatus(loanDocumentId, scanStatus, scanReference);
             response.isSuccess = true;
@@ -113,6 +120,7 @@ public with sharing class LoanDocumentController {
             if (!canReviewActions()) {
                 throw new AuraHandledException('You do not have access to authenticity update actions.');
             }
+            ensureLoanDocumentUpdateAccess();
             LoanDocumentCommandService commandService = new LoanDocumentCommandService();
             commandService.updateDocumentAuthenticity(
                 loanDocumentId,
@@ -130,6 +138,20 @@ public with sharing class LoanDocumentController {
 
     private static Boolean canReviewActions() {
         return FeatureManagement.checkPermission('Loan_Document_Ops') || isCurrentUserAdmin();
+    }
+
+    private static void ensurePanelReadAccess() {
+        if (isCurrentUserAdmin()) return;
+        if (!Schema.sObjectType.Loan__c.isAccessible() || !Schema.sObjectType.Loan_Document__c.isAccessible()) {
+            throw new AuraHandledException('You do not have access to loan document data.');
+        }
+    }
+
+    private static void ensureLoanDocumentUpdateAccess() {
+        if (isCurrentUserAdmin()) return;
+        if (!Schema.sObjectType.Loan_Document__c.isUpdateable()) {
+            throw new AuraHandledException('You do not have update access to loan documents.');
+        }
     }
 
     private static Boolean isCurrentUserAdmin() {
