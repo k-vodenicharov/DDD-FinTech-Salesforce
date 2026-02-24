@@ -8,72 +8,6 @@ public with sharing class LoanDocumentQueryService {
         this.domain = new LoanDocumentationDomain();
     }
 
-    public class RequirementItem {
-        @AuraEnabled public Id loanDocumentId;
-        @AuraEnabled public String documentType;
-        @AuraEnabled public String status;
-        @AuraEnabled public String scanStatus;
-        @AuraEnabled public String authenticityStatus;
-        @AuraEnabled public Decimal authenticityScore;
-        @AuraEnabled public String authenticityReference;
-        @AuraEnabled public Datetime authenticityCheckedOn;
-        @AuraEnabled public String approvalGateState;
-        @AuraEnabled public String approvalGateLabel;
-        @AuraEnabled public Boolean approvalAllowed;
-        @AuraEnabled public String scanReference;
-        @AuraEnabled public Datetime scannedOn;
-        @AuraEnabled public String rejectionReason;
-        @AuraEnabled public String opsComments;
-        @AuraEnabled public Datetime reviewedOn;
-        @AuraEnabled public Date dueOn;
-        @AuraEnabled public String slaState;
-        @AuraEnabled public Datetime lastUploadOn;
-        @AuraEnabled public String uploadedByName;
-        @AuraEnabled public Id contentDocumentId;
-        @AuraEnabled public String fileName;
-        @AuraEnabled public String fileExtension;
-        @AuraEnabled public Boolean isRequired;
-        @AuraEnabled public String allowedMimeTypes;
-        @AuraEnabled public Decimal maxSizeMb;
-    }
-
-    public class LoanDocumentPanelDto {
-        @AuraEnabled public List<RequirementItem> requiredChecklist;
-        @AuraEnabled public List<RequirementItem> uploadedDocuments;
-        @AuraEnabled public List<AuditItem> activityTimeline;
-        @AuraEnabled public List<String> missingTypes;
-        @AuraEnabled public List<String> availableDocumentTypes;
-        @AuraEnabled public Integer progressPercent;
-        @AuraEnabled public Integer requiredTotal;
-        @AuraEnabled public Integer requiredApproved;
-        @AuraEnabled public Boolean isOps;
-        @AuraEnabled public Boolean isAdmin;
-        @AuraEnabled public Boolean canReviewActions;
-        @AuraEnabled public Boolean canSeeAuditTrail;
-        @AuraEnabled public Boolean canSeeInternalScanDetails;
-        @AuraEnabled public Boolean hasOverdue;
-        @AuraEnabled public Id openTaskId;
-        @AuraEnabled public Integer opsWorkloadPendingReview;
-        @AuraEnabled public Integer opsWorkloadNeedsClarification;
-        @AuraEnabled public Integer opsWorkloadRejected;
-        @AuraEnabled public Integer opsWorkloadBlockedByScan;
-        @AuraEnabled public String opsOldestPendingDocumentType;
-        @AuraEnabled public Datetime opsOldestPendingUploadedOn;
-        @AuraEnabled public Integer opsOldestPendingAgeDays;
-    }
-
-    public class AuditItem {
-        @AuraEnabled public String action;
-        @AuraEnabled public String actionLabel;
-        @AuraEnabled public String documentType;
-        @AuraEnabled public String fromStatus;
-        @AuraEnabled public String toStatus;
-        @AuraEnabled public Datetime actionOn;
-        @AuraEnabled public String actorName;
-        @AuraEnabled public String details;
-        @AuraEnabled public String summary;
-    }
-
     public List<String> getRequiredDocumentTypesForLoan(Id loanId) {
         LoanDocumentPanelDto dto = getPanelData(loanId);
         List<String> types = new List<String>();
@@ -91,9 +25,9 @@ public with sharing class LoanDocumentQueryService {
 
     public LoanDocumentPanelDto getPanelData(Id loanId) {
         LoanDocumentPanelDto dto = new LoanDocumentPanelDto();
-        dto.requiredChecklist = new List<RequirementItem>();
-        dto.uploadedDocuments = new List<RequirementItem>();
-        dto.activityTimeline = new List<AuditItem>();
+        dto.requiredChecklist = new List<LoanDocumentRequirementItemDto>();
+        dto.uploadedDocuments = new List<LoanDocumentRequirementItemDto>();
+        dto.activityTimeline = new List<LoanDocumentAuditItemDto>();
         dto.missingTypes = new List<String>();
         dto.availableDocumentTypes = new List<String>();
         dto.progressPercent = 0;
@@ -147,7 +81,7 @@ public with sharing class LoanDocumentQueryService {
         }
 
         Set<Id> linkedContentIds = LoanDocumentSelector.getLinkedDocumentIds(loanId, contentIds);
-        Map<Id, LoanDocumentSelector.ContentFileInfo> contentInfoMap = LoanDocumentSelector.getContentFileInfo(linkedContentIds);
+        Map<Id, LoanDocumentContentFileInfoDto> contentInfoMap = LoanDocumentSelector.getContentFileInfo(linkedContentIds);
         for (Loan_Document__c row : latestDocs) {
             String key = domain.normalize(row.Document_Type__c);
             if (key == null) continue;
@@ -164,7 +98,7 @@ public with sharing class LoanDocumentQueryService {
         }
 
         for (LoanDocumentationDomain.RequirementOutcome outcome : effective.values()) {
-            RequirementItem item = new RequirementItem();
+            LoanDocumentRequirementItemDto item = new LoanDocumentRequirementItemDto();
             item.documentType = outcome.documentType;
             item.isRequired = outcome.isRequired;
             dto.availableDocumentTypes.add(outcome.documentType);
@@ -184,7 +118,7 @@ public with sharing class LoanDocumentQueryService {
         }
 
         for (Loan_Document__c row : latestDocs) {
-            RequirementItem item = new RequirementItem();
+            LoanDocumentRequirementItemDto item = new LoanDocumentRequirementItemDto();
             hydrateFromRecord(item, row, uploaderNames, contentInfoMap, linkedContentIds, dto.canSeeInternalScanDetails);
             item.isRequired = effective.containsKey(domain.normalize(row.Document_Type__c))
                 ? effective.get(domain.normalize(row.Document_Type__c)).isRequired
@@ -199,7 +133,7 @@ public with sharing class LoanDocumentQueryService {
 
         dto.availableDocumentTypes.sort();
         dto.missingTypes = domain.computeMissingRequired(effective, latestStatusByType);
-        for (RequirementItem req : dto.requiredChecklist) {
+        for (LoanDocumentRequirementItemDto req : dto.requiredChecklist) {
             dto.requiredTotal++;
             if (domain.normalize(req.status) == 'approved') dto.requiredApproved++;
         }
@@ -208,7 +142,7 @@ public with sharing class LoanDocumentQueryService {
 
         if (dto.isAdmin || Schema.sObjectType.Loan_Document_Audit__c.isAccessible()) {
             for (Loan_Document_Audit__c row : LoanDocumentSelector.getAuditByLoanId(loanId, 15)) {
-                AuditItem item = new AuditItem();
+                LoanDocumentAuditItemDto item = new LoanDocumentAuditItemDto();
                 item.action = row.Action__c;
                 item.actionLabel = toActionLabel(row.Action__c);
                 item.documentType = row.Loan_Document__r == null ? null : row.Loan_Document__r.Document_Type__c;
@@ -281,7 +215,7 @@ public with sharing class LoanDocumentQueryService {
         return toStatusLabel(action);
     }
 
-    private String buildAuditSummary(AuditItem item) {
+    private String buildAuditSummary(LoanDocumentAuditItemDto item) {
         List<String> parts = new List<String>();
         if (!String.isBlank(item.documentType)) parts.add(item.documentType);
         if (!String.isBlank(item.fromStatus) || !String.isBlank(item.toStatus)) {
@@ -312,10 +246,10 @@ public with sharing class LoanDocumentQueryService {
     }
 
     private void hydrateFromRecord(
-        RequirementItem item,
+        LoanDocumentRequirementItemDto item,
         Loan_Document__c row,
         Map<Id, String> uploaderNames,
-        Map<Id, LoanDocumentSelector.ContentFileInfo> contentInfoMap,
+        Map<Id, LoanDocumentContentFileInfoDto> contentInfoMap,
         Set<Id> linkedContentIds,
         Boolean canSeeInternalScanDetails
     ) {
@@ -340,7 +274,7 @@ public with sharing class LoanDocumentQueryService {
         item.uploadedByName = row.Uploaded_By__c == null ? null : uploaderNames.get(row.Uploaded_By__c);
         if (hasLinkedFile && contentInfoMap != null && contentInfoMap.containsKey(contentId)) {
             item.contentDocumentId = contentId;
-            LoanDocumentSelector.ContentFileInfo info = contentInfoMap.get(contentId);
+            LoanDocumentContentFileInfoDto info = contentInfoMap.get(contentId);
             item.fileName = info == null ? null : info.displayName;
             item.fileExtension = info == null ? null : info.fileExtension;
         }
@@ -370,7 +304,7 @@ public with sharing class LoanDocumentQueryService {
         return 'Required';
     }
 
-    private void applyApprovalGate(RequirementItem item, Boolean hasLinkedFile) {
+    private void applyApprovalGate(LoanDocumentRequirementItemDto item, Boolean hasLinkedFile) {
         String normalizedStatus = domain.normalize(item == null ? null : item.status);
         String normalizedScan = domain.normalize(item == null ? null : item.scanStatus);
         String normalizedAuthenticity = domain.normalize(item == null ? null : item.authenticityStatus);
@@ -456,7 +390,7 @@ public with sharing class LoanDocumentQueryService {
         return !rows.isEmpty() && rows[0].PermissionsModifyAllData;
     }
 
-    private Boolean shouldIncludeAuditItem(AuditItem item, Boolean canSeeAuditTrail) {
+    private Boolean shouldIncludeAuditItem(LoanDocumentAuditItemDto item, Boolean canSeeAuditTrail) {
         if (canSeeAuditTrail) return true;
         String action = domain.normalize(item == null ? null : item.action);
         return action == 'uploaded'
@@ -466,7 +400,7 @@ public with sharing class LoanDocumentQueryService {
             || action == 'rejected';
     }
 
-    private String sanitizeBorrowerAuditDetails(AuditItem item) {
+    private String sanitizeBorrowerAuditDetails(LoanDocumentAuditItemDto item) {
         String action = domain.normalize(item == null ? null : item.action);
         if (action == 'clarification_requested' || action == 'rejected') {
             return item.details;

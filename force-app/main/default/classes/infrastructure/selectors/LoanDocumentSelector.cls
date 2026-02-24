@@ -2,11 +2,6 @@
  * Query helper for loan document lifecycle reads.
  */
 public with sharing class LoanDocumentSelector {
-    public class ContentFileInfo {
-        public String title;
-        public String fileExtension;
-        public String displayName;
-    }
     public static List<Loan_Document_Requirement__mdt> getRequirementRules() {
         return [
             SELECT DeveloperName, Document_Type__c, Is_Required__c,
@@ -104,15 +99,15 @@ public with sharing class LoanDocumentSelector {
         return titles;
     }
 
-    public static Map<Id, ContentFileInfo> getContentFileInfo(Set<Id> contentDocumentIds) {
-        Map<Id, ContentFileInfo> out = new Map<Id, ContentFileInfo>();
+    public static Map<Id, LoanDocumentContentFileInfoDto> getContentFileInfo(Set<Id> contentDocumentIds) {
+        Map<Id, LoanDocumentContentFileInfoDto> out = new Map<Id, LoanDocumentContentFileInfoDto>();
         if (contentDocumentIds == null || contentDocumentIds.isEmpty()) return out;
         for (ContentVersion versionRecord : [
             SELECT ContentDocumentId, Title, FileExtension
             FROM ContentVersion
             WHERE IsLatest = true AND ContentDocumentId IN :contentDocumentIds
         ]) {
-            ContentFileInfo info = new ContentFileInfo();
+            LoanDocumentContentFileInfoDto info = new LoanDocumentContentFileInfoDto();
             info.title = versionRecord.Title;
             info.fileExtension = versionRecord.FileExtension;
             String display = versionRecord.Title;

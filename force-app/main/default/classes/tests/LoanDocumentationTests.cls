@@ -189,7 +189,7 @@ private class LoanDocumentationTests {
         LoanDocumentCommandService svc = new LoanDocumentCommandService();
         svc.ensureRequiredRecords(new Set<Id>{loan.Id});
 
-        LoanDocumentQueryService.LoanDocumentPanelDto panel = new LoanDocumentQueryService().getPanelData(loan.Id);
+        LoanDocumentPanelDto panel = new LoanDocumentQueryService().getPanelData(loan.Id);
         System.assert(panel.missingTypes.contains('Proof of Address'),
             'Proof of Address should be required for unsecured high amount based on metadata.');
     }
@@ -260,7 +260,7 @@ private class LoanDocumentationTests {
             WHERE LinkedEntityId = :loan.Id AND ContentDocumentId = :docId
         ];
 
-        LoanDocumentQueryService.LoanDocumentPanelDto panel = new LoanDocumentQueryService().getPanelData(loan.Id);
+        LoanDocumentPanelDto panel = new LoanDocumentQueryService().getPanelData(loan.Id);
         System.assert(panel.missingTypes.contains('Government ID'),
             'Approved lifecycle row must not be counted complete when file is no longer linked.');
         System.assertEquals(0, panel.requiredApproved,
@@ -440,7 +440,7 @@ private class LoanDocumentationTests {
             new LoanDocumentCommandService().updateDocumentScanStatus(doc.Id, 'Infected', 'SCAN-BLOCK-001');
         }
 
-        LoanDocumentQueryService.LoanDocumentPanelDto panel = new LoanDocumentQueryService().getPanelData(loan.Id);
+        LoanDocumentPanelDto panel = new LoanDocumentQueryService().getPanelData(loan.Id);
         System.assert(panel.isOps, 'System context should have ops visibility for workbench metrics.');
         System.assert(panel.opsWorkloadPendingReview >= 1, 'Pending review workload should include the uploaded document.');
         System.assert(panel.opsWorkloadBlockedByScan >= 1, 'Blocked-by-scan workload should include infected documents.');

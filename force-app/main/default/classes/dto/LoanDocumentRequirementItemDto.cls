@@ -1,0 +1,28 @@
+public class LoanDocumentRequirementItemDto {
+    @AuraEnabled public Id loanDocumentId;
+    @AuraEnabled public String documentType;
+    @AuraEnabled public String status;
+    @AuraEnabled public String scanStatus;
+    @AuraEnabled public String authenticityStatus;
+    @AuraEnabled public Decimal authenticityScore;
+    @AuraEnabled public String authenticityReference;
+    @AuraEnabled public Datetime authenticityCheckedOn;
+    @AuraEnabled public String approvalGateState;
+    @AuraEnabled public String approvalGateLabel;
+    @AuraEnabled public Boolean approvalAllowed;
+    @AuraEnabled public String scanReference;
+    @AuraEnabled public Datetime scannedOn;
+    @AuraEnabled public String rejectionReason;
+    @AuraEnabled public String opsComments;
+    @AuraEnabled public Datetime reviewedOn;
+    @AuraEnabled public Date dueOn;
+    @AuraEnabled public String slaState;
+    @AuraEnabled public Datetime lastUploadOn;
+    @AuraEnabled public String uploadedByName;
+    @AuraEnabled public Id contentDocumentId;
+    @AuraEnabled public String fileName;
+    @AuraEnabled public String fileExtension;
+    @AuraEnabled public Boolean isRequired;
+    @AuraEnabled public String allowedMimeTypes;
+    @AuraEnabled public Decimal maxSizeMb;
+}

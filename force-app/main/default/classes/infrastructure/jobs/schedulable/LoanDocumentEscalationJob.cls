@@ -37,7 +37,7 @@ global class LoanDocumentEscalationJob implements Schedulable {
         LoanDocumentationDomain domain = new LoanDocumentationDomain();
 
         for (Id loanId : loanIds) {
-            LoanDocumentQueryService.LoanDocumentPanelDto panel = queryService.getPanelData(loanId);
+            LoanDocumentPanelDto panel = queryService.getPanelData(loanId);
             if (panel == null || panel.missingTypes == null || panel.missingTypes.isEmpty()) continue;
 
             Boolean shouldNotify = false;

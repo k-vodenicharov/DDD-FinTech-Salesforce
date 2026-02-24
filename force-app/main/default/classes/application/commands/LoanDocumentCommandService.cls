@@ -680,11 +680,11 @@ public with sharing class LoanDocumentCommandService {
         }
 
         for (Id loanId : loanIds) {
-            LoanDocumentQueryService.LoanDocumentPanelDto panel = queryService.getPanelData(loanId);
+            LoanDocumentPanelDto panel = queryService.getPanelData(loanId);
             Integer awaiting = 0;
             Integer rejectedCount = 0;
             Integer clarificationCount = 0;
-            for (LoanDocumentQueryService.RequirementItem item : panel.requiredChecklist) {
+            for (LoanDocumentRequirementItemDto item : panel.requiredChecklist) {
                 String normalizedStatus = domain.normalize(item.status);
                 if (normalizedStatus == 'under_review' || normalizedStatus == 'rejected' || normalizedStatus == 'needs_clarification') {
                     awaiting++;

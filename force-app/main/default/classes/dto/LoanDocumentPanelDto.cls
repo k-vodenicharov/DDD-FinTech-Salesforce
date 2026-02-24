@@ -1,0 +1,24 @@
+public class LoanDocumentPanelDto {
+    @AuraEnabled public List<LoanDocumentRequirementItemDto> requiredChecklist;
+    @AuraEnabled public List<LoanDocumentRequirementItemDto> uploadedDocuments;
+    @AuraEnabled public List<LoanDocumentAuditItemDto> activityTimeline;
+    @AuraEnabled public List<String> missingTypes;
+    @AuraEnabled public List<String> availableDocumentTypes;
+    @AuraEnabled public Integer progressPercent;
+    @AuraEnabled public Integer requiredTotal;
+    @AuraEnabled public Integer requiredApproved;
+    @AuraEnabled public Boolean isOps;
+    @AuraEnabled public Boolean isAdmin;
+    @AuraEnabled public Boolean canReviewActions;
+    @AuraEnabled public Boolean canSeeAuditTrail;
+    @AuraEnabled public Boolean canSeeInternalScanDetails;
+    @AuraEnabled public Boolean hasOverdue;
+    @AuraEnabled public Id openTaskId;
+    @AuraEnabled public Integer opsWorkloadPendingReview;
+    @AuraEnabled public Integer opsWorkloadNeedsClarification;
+    @AuraEnabled public Integer opsWorkloadRejected;
+    @AuraEnabled public Integer opsWorkloadBlockedByScan;
+    @AuraEnabled public String opsOldestPendingDocumentType;
+    @AuraEnabled public Datetime opsOldestPendingUploadedOn;
+    @AuraEnabled public Integer opsOldestPendingAgeDays;
+}

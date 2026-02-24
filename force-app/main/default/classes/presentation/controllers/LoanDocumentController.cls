@@ -11,7 +11,7 @@ public with sharing class LoanDocumentController {
     }
 
     @AuraEnabled
-    public static LoanDocumentQueryService.LoanDocumentPanelDto getPanelData(Id loanId) {
+    public static LoanDocumentPanelDto getPanelData(Id loanId) {
         ensurePanelReadAccess();
         LoanDocumentQueryService queryService = new LoanDocumentQueryService();
         return queryService.getPanelData(loanId);

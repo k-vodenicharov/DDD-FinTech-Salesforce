@@ -59,8 +59,8 @@ global with sharing class LoanController {
 
     /** Returns loans for an account for list rendering. */
     @AuraEnabled(cacheable=true)
-    public static List<LoanListItem> getLoansByAccount(Id accountId) {
-        if (accountId == null) return new List<LoanListItem>();
+    public static List<LoanListItemDto> getLoansByAccount(Id accountId) {
+        if (accountId == null) return new List<LoanListItemDto>();
 
         LoanQueryService queryService = new LoanQueryService();
         List<Loan__c> loans = queryService.getLoansByAccountId(accountId);
@@ -68,10 +68,10 @@ global with sharing class LoanController {
         List<SObject> sobs = new List<SObject>();
         sobs.addAll(loans);
         List<SObject> sanitized = SecurityUtil.stripRead(sobs);
-        List<LoanListItem> items = new List<LoanListItem>();
+        List<LoanListItemDto> items = new List<LoanListItemDto>();
         for (SObject sob : sanitized) {
             Loan__c loan = (Loan__c) sob;
-            LoanListItem item = new LoanListItem();
+            LoanListItemDto item = new LoanListItemDto();
             item.id = loan.Id;
             item.name = loan.Name;
             item.status = loan.Loan_Status__c;
@@ -82,16 +82,5 @@ global with sharing class LoanController {
             items.add(item);
         }
         return items;
-    }
-
-    /** Lightweight DTO for UI consumption. */
-    public class LoanListItem {
-        @AuraEnabled public Id id;
-        @AuraEnabled public String name;
-        @AuraEnabled public String status;
-        @AuraEnabled public Decimal amount;
-        @AuraEnabled public Decimal term;
-        @AuraEnabled public Decimal rate;
-        @AuraEnabled public Datetime created;
     }
 }
