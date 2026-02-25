@@ -518,6 +518,24 @@
     align-items: flex-start;
 }
 
+.upload-guidance {
+    margin: 0 0 0.35rem;
+    font-size: 0.77rem;
+    color: #f7cf9f;
+    border: 1px solid #7c5730;
+    border-radius: 0.4rem;
+    background: rgba(88, 58, 27, 0.34);
+    padding: 0.3rem 0.45rem;
+}
+
+.upload-focus {
+    border: 1px solid #2d8fff;
+    border-radius: 0.45rem;
+    padding: 0.3rem;
+    background: rgba(45, 143, 255, 0.11);
+    box-shadow: 0 0 0 1px rgba(45, 143, 255, 0.28);
+}
+
 .neo-task-box {
     margin-top: 0.7rem;
     border-top: 1px solid #2c425f;

@@ -131,8 +131,11 @@
                                 <p class="doc-meta">{selectedRow.policyHintText}</p>
                             </div>
                             <div class="neo-preview-actions">
+                                <template if:true={showReuploadGuidance}>
+                                    <p class="upload-guidance">{reuploadGuidanceText}</p>
+                                </template>
                                 <template if:true={showInlineUpload}>
-                                    <div class="neo-action-row neo-action-row-upload">
+                                    <div class={uploadRowClass}>
                                         <lightning-file-upload
                                             data-document-type={selectedRow.documentType}
                                             label={selectedRow.uploadLabel}

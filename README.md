@@ -87,6 +87,7 @@ This repository contains a Salesforce implementation for managing loan applicati
 - SLA Workbench added for ops: queue workload counts, blocked-by-scan count, oldest pending document hint, and breach risk indicator
 - Loan document case routing added: per-loan `Loan_Document_Case__c` summary now syncs status/counts/alert snapshot and routes open cases to the configured ops queue
 - Escalation scheduler sends reminders, updates alert level/SLA, and creates one queue task per loan
+- Clarification `Fix Now` action now focuses the selected document and upload area for a direct borrower recovery flow
 - Upgraded `loanDocumentsPanel` provides checklist workspace, progress summary, filters, preview/download/replace actions, and ops-only approve/reject
 
 ## Data Model
@@ -359,6 +360,7 @@ job.execute(null);
 5. **Ops flow: reject and clarification**
    - Reject another document and verify reason is mandatory and persisted.
    - Request clarification and verify borrower sees clarification message/inbox with action to re-upload.
+   - Click borrower `Fix Now` and verify the selected clarification document is focused and upload area is highlighted.
    - Borrower uploads replacement and verify status returns to `Under Review`.
 6. **Fraud/safety path**
    - As Ops, set authenticity to `Suspected Fraud`.

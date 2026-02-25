@@ -50,12 +50,17 @@ export default class LoanDocumentsPanel extends NavigationMixin(LightningElement
     @track selectedFilter = 'all';
     @track searchTerm = '';
     @track selectedRowId = null;
+    @track uploadFocusMode = false;
     pendingRejectDocId = null;
     pendingClarifyDocId = null;
 
     defaultAcceptedFormats = ['.pdf', '.png', '.jpg', '.jpeg', '.doc', '.docx'];
     connectedCallback() {
         this.initialize();
+    }
+
+    disconnectedCallback() {
+        window.clearTimeout(this.uploadFocusTimer);
     }
 
     get filteredChecklist() {
@@ -320,6 +325,22 @@ export default class LoanDocumentsPanel extends NavigationMixin(LightningElement
         const row = this.selectedRow;
         if (!row || this.isOps) return false;
         return (row.status || '').toLowerCase() === 'needs_clarification';
+    }
+
+    get showReuploadGuidance() {
+        const row = this.selectedRow;
+        if (!row || this.isOps || !this.showInlineUpload) return false;
+        return (row.status || '').toLowerCase() === 'needs_clarification';
+    }
+
+    get reuploadGuidanceText() {
+        const row = this.selectedRow;
+        if (!row) return 'Upload a corrected file to continue review.';
+        return `Upload a corrected ${row.documentType} file. Status returns to Under Review after upload.`;
+    }
+
+    get uploadRowClass() {
+        return this.uploadFocusMode ? 'neo-action-row neo-action-row-upload upload-focus' : 'neo-action-row neo-action-row-upload';
     }
 
     get shortTimeline() {
@@ -751,31 +772,37 @@ export default class LoanDocumentsPanel extends NavigationMixin(LightningElement
     handleFixNow(event) {
         const rowId = event.currentTarget?.dataset?.rowid;
         if (!rowId) return;
-        this.selectedFilter = 'all';
+        this.selectedFilter = 'needs_clarification';
         this.selectedRowId = rowId;
         this.showInlineUpload = !this.isOps;
-        const row = (this.checklistRows || []).find((item) => item.id === rowId);
-        const docLabel = row?.documentType || 'document';
-        this.showToast('Info', `Ready to re-upload ${docLabel}.`, 'info');
-        requestAnimationFrame(() => {
-            const centerPanel = this.template.querySelector('.neo-center');
-            if (centerPanel) {
-                centerPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
+        this.focusUploadArea(true);
     }
 
     handleClarificationReupload() {
         const row = this.selectedRow;
         if (!row) return;
         this.showInlineUpload = true;
-        this.showToast('Info', `Upload replacement for ${row.documentType}.`, 'info');
+        this.focusUploadArea(false);
+    }
+
+    focusUploadArea(withHighlight) {
+        this.uploadFocusMode = withHighlight === true;
         requestAnimationFrame(() => {
+            const centerPanel = this.template.querySelector('.neo-center');
+            if (centerPanel) {
+                centerPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
             const uploadZone = this.template.querySelector('.neo-action-row-upload');
             if (uploadZone) {
                 uploadZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
+        if (this.uploadFocusMode) {
+            window.clearTimeout(this.uploadFocusTimer);
+            this.uploadFocusTimer = window.setTimeout(() => {
+                this.uploadFocusMode = false;
+            }, 2200);
+        }
     }
 
     async handleAction(actionName, row) {
@@ -912,12 +939,14 @@ export default class LoanDocumentsPanel extends NavigationMixin(LightningElement
             this.selectedRowId = null;
             this.showFullRejection = false;
             this.showInlineUpload = false;
+            this.uploadFocusMode = false;
             return;
         }
         if (!this.selectedRowId || !rows.some((row) => row.id === this.selectedRowId)) {
             this.selectedRowId = rows[0].id;
             this.showFullRejection = false;
             this.showInlineUpload = false;
+            this.uploadFocusMode = false;
         }
     }
 
