@@ -1,14 +1,10 @@
 /**
- * Test-only platform event consumer stub.
+ * Platform event consumer for Loan_Event__e.
  */
 public with sharing class LoanEventConsumer {
-    /** Logs received events during tests. */
+    /** Logs received events for operational visibility. */
     public static void handle(List<Loan_Event__e> events) {
         if (events == null || events.isEmpty()) return;
-        // Only active in tests to avoid runtime side effects.
-        if (!Test.isRunningTest()) {
-            return;
-        }
         for (Loan_Event__e evt : events) {
             if (evt == null) continue;
             System.debug(LoggingLevel.INFO,

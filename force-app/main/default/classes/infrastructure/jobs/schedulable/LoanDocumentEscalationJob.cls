@@ -80,13 +80,24 @@ global class LoanDocumentEscalationJob implements Schedulable {
         }
 
         if (!updates.isEmpty()) {
+            if (!Schema.SObjectType.Loan_Document__c.isUpdateable()) {
+                throw new SecurityException('Insufficient access to update Loan Documents.');
+            }
             List<SObject> sobs = new List<SObject>();
             sobs.addAll(updates);
             List<SObject> sanitizedUpdates = SecurityUtil.stripUpdate(sobs);
             if (!sanitizedUpdates.isEmpty()) update sanitizedUpdates;
         }
         if (!tasksToInsert.isEmpty()) {
-            insert tasksToInsert;
+            if (!Schema.SObjectType.Task.isCreateable()) {
+                throw new SecurityException('Insufficient access to create Task records.');
+            }
+            List<SObject> taskSObjects = new List<SObject>();
+            taskSObjects.addAll(tasksToInsert);
+            List<SObject> sanitizedTasks = SecurityUtil.stripCreate(taskSObjects);
+            if (!sanitizedTasks.isEmpty()) {
+                insert sanitizedTasks;
+            }
         }
     }
 
