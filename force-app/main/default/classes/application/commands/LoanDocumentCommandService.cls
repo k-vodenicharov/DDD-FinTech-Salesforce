@@ -36,6 +36,9 @@ public with sharing class LoanDocumentCommandService {
         for (ContentVersion versionRecord : latestVersions) {
             versionRecord.Document_Type__c = documentType;
         }
+        if (!Schema.SObjectType.ContentVersion.isUpdateable()) {
+            throw new LoanDocumentException('Insufficient access to update document metadata.');
+        }
         List<SObject> sobs = new List<SObject>();
         sobs.addAll(latestVersions);
         List<SObject> sanitized = SecurityUtil.stripUpdate(sobs);
@@ -750,13 +753,7 @@ public with sharing class LoanDocumentCommandService {
 
     private Boolean isCurrentUserAdmin() {
         if (cachedIsAdmin != null) return cachedIsAdmin;
-        List<Profile> rows = [
-            SELECT PermissionsModifyAllData
-            FROM Profile
-            WHERE Id = :UserInfo.getProfileId()
-            LIMIT 1
-        ];
-        cachedIsAdmin = !rows.isEmpty() && rows[0].PermissionsModifyAllData;
+        cachedIsAdmin = SecurityUtil.isCurrentUserAdmin();
         return cachedIsAdmin;
     }
 

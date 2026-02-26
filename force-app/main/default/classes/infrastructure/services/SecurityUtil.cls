@@ -22,4 +22,21 @@ public class SecurityUtil {
         if (Test.isRunningTest()) return records;
         return Security.stripInaccessible(AccessType.READABLE, records).getRecords();
     }
+
+    /** Returns true when current user has Modify All Data permission. */
+    public static Boolean isCurrentUserAdmin() {
+        if (!Schema.SObjectType.Profile.isAccessible()) return false;
+        try {
+            List<Profile> rows = [
+                SELECT PermissionsModifyAllData
+                FROM Profile
+                WHERE Id = :UserInfo.getProfileId()
+                WITH SECURITY_ENFORCED
+                LIMIT 1
+            ];
+            return !rows.isEmpty() && rows[0].PermissionsModifyAllData;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

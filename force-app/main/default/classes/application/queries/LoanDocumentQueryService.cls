@@ -12,7 +12,7 @@ public with sharing class LoanDocumentQueryService {
         LoanDocumentPanelDto dto = getPanelData(loanId);
         List<String> types = new List<String>();
         Set<String> seen = new Set<String>();
-        for (RequirementItem row : dto.requiredChecklist) {
+        for (LoanDocumentRequirementItemDto row : dto.requiredChecklist) {
             if (String.isBlank(row.documentType)) continue;
             String normalized = domain.normalize(row.documentType);
             if (seen.contains(normalized)) continue;
@@ -92,7 +92,7 @@ public with sharing class LoanDocumentQueryService {
 
         Map<Id, String> uploaderNames = new Map<Id, String>();
         if (!uploaderIds.isEmpty()) {
-            for (User u : [SELECT Id, Name FROM User WHERE Id IN :uploaderIds]) {
+            for (User u : LoanDocumentSelector.getUsersWithNamesByIds(uploaderIds)) {
                 uploaderNames.put(u.Id, u.Name);
             }
         }
@@ -381,13 +381,7 @@ public with sharing class LoanDocumentQueryService {
     }
 
     private Boolean isCurrentUserAdmin() {
-        List<Profile> rows = [
-            SELECT PermissionsModifyAllData
-            FROM Profile
-            WHERE Id = :UserInfo.getProfileId()
-            LIMIT 1
-        ];
-        return !rows.isEmpty() && rows[0].PermissionsModifyAllData;
+        return SecurityUtil.isCurrentUserAdmin();
     }
 
     private Boolean shouldIncludeAuditItem(LoanDocumentAuditItemDto item, Boolean canSeeAuditTrail) {

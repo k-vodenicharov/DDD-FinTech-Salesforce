@@ -156,13 +156,7 @@ public with sharing class LoanDocumentController {
 
     private static Boolean isCurrentUserAdmin() {
         if (cachedIsAdmin != null) return cachedIsAdmin;
-        List<Profile> rows = [
-            SELECT PermissionsModifyAllData
-            FROM Profile
-            WHERE Id = :UserInfo.getProfileId()
-            LIMIT 1
-        ];
-        cachedIsAdmin = !rows.isEmpty() && rows[0].PermissionsModifyAllData;
+        cachedIsAdmin = SecurityUtil.isCurrentUserAdmin();
         return cachedIsAdmin;
     }
 }

@@ -19,6 +19,7 @@ public with sharing class LoanDocumentSelector {
             SELECT Id, Name, Loan_Type__c, Loan_Status__c, Loan_Amount__c, CreatedDate, Account__r.Name
             FROM Loan__c
             WHERE Id IN :loanIds
+
         ];
     }
 
@@ -28,6 +29,7 @@ public with sharing class LoanDocumentSelector {
             FROM Loan__c
             WHERE Loan_Status__c IN ('Pending', 'Under Review')
               AND CreatedDate <= :firstAlertCutoff
+
         ];
     }
 
@@ -42,6 +44,7 @@ public with sharing class LoanDocumentSelector {
                    LastModifiedDate
             FROM Loan_Document__c
             WHERE Loan__c IN :loanIds AND Is_Latest__c = true
+
         ];
     }
 
@@ -54,6 +57,7 @@ public with sharing class LoanDocumentSelector {
                    Due_On__c, SLA_State__c
             FROM Loan_Document__c
             WHERE Loan__c IN :loanIds AND Is_Latest__c = true AND Document_Type__c IN :documentTypes
+
         ];
     }
 
@@ -65,6 +69,7 @@ public with sharing class LoanDocumentSelector {
             SELECT Id, Loan__c, Document_Type__c, Status__c, Is_Latest__c, Content_Document_Id__c
             FROM Loan_Document__c
             WHERE Loan__c IN :loanIds AND Is_Latest__c = true AND Content_Document_Id__c IN :contentDocumentIds
+
         ];
     }
 
@@ -74,6 +79,7 @@ public with sharing class LoanDocumentSelector {
             SELECT LinkedEntityId, ContentDocumentId
             FROM ContentDocumentLink
             WHERE LinkedEntityId IN :loanIds
+
         ];
     }
 
@@ -83,6 +89,7 @@ public with sharing class LoanDocumentSelector {
             SELECT Id, ContentDocumentId, Title, FileType, FileExtension, ContentSize, Document_Type__c, CreatedDate, CreatedById
             FROM ContentVersion
             WHERE IsLatest = true AND ContentDocumentId IN :contentDocumentIds
+
         ];
     }
 
@@ -93,6 +100,7 @@ public with sharing class LoanDocumentSelector {
             SELECT Id, Title
             FROM ContentDocument
             WHERE Id IN :contentDocumentIds
+
         ]) {
             titles.put(doc.Id, doc.Title);
         }
@@ -106,6 +114,7 @@ public with sharing class LoanDocumentSelector {
             SELECT ContentDocumentId, Title, FileExtension
             FROM ContentVersion
             WHERE IsLatest = true AND ContentDocumentId IN :contentDocumentIds
+
         ]) {
             LoanDocumentContentFileInfoDto info = new LoanDocumentContentFileInfoDto();
             info.title = versionRecord.Title;
@@ -130,6 +139,7 @@ public with sharing class LoanDocumentSelector {
             SELECT ContentDocumentId
             FROM ContentDocumentLink
             WHERE LinkedEntityId = :loanId AND ContentDocumentId IN :contentDocumentIds
+
         ]) {
             linked.add(link.ContentDocumentId);
         }
@@ -142,6 +152,7 @@ public with sharing class LoanDocumentSelector {
             SELECT Id, WhatId
             FROM Task
             WHERE WhatId IN :loanIds AND Subject = 'Missing required loan documents' AND Status != 'Completed'
+
         ];
     }
 
@@ -151,6 +162,7 @@ public with sharing class LoanDocumentSelector {
             FROM Loan_Document__c
             WHERE Is_Latest__c = true
               AND Status__c IN ('Under_Review', 'Needs_Clarification', 'Rejected')
+
             GROUP BY Status__c
         ];
     }
@@ -162,6 +174,7 @@ public with sharing class LoanDocumentSelector {
             WHERE Is_Latest__c = true
               AND Status__c IN ('Under_Review', 'Needs_Clarification', 'Rejected')
               AND Scan_Status__c IN ('Infected', 'Failed')
+
         ];
         if (rows.isEmpty()) return 0;
         Object raw = rows[0].get('totalCount');
@@ -175,6 +188,7 @@ public with sharing class LoanDocumentSelector {
             FROM Loan_Document__c
             WHERE Is_Latest__c = true
               AND Status__c IN ('Under_Review', 'Needs_Clarification', 'Rejected')
+
             ORDER BY Uploaded_On__c ASC NULLS LAST, CreatedDate ASC
             LIMIT :safeLimit
         ];
@@ -186,6 +200,7 @@ public with sharing class LoanDocumentSelector {
             SELECT Id
             FROM Group
             WHERE Type = 'Queue' AND DeveloperName = :queueDeveloperName
+
             LIMIT 1
         ];
     }
@@ -196,12 +211,18 @@ public with sharing class LoanDocumentSelector {
             SELECT GroupId, UserOrGroupId
             FROM GroupMember
             WHERE GroupId = :groupId
+
         ];
     }
 
     public static List<User> getUsersByIds(Set<Id> userIds) {
         if (userIds == null || userIds.isEmpty()) return new List<User>();
         return [SELECT Id, Email FROM User WHERE Id IN :userIds];
+    }
+
+    public static List<User> getUsersWithNamesByIds(Set<Id> userIds) {
+        if (userIds == null || userIds.isEmpty()) return new List<User>();
+        return [SELECT Id, Name FROM User WHERE Id IN :userIds];
     }
 
     public static Map<Id, Loan_Document_Case__c> getCasesByLoanIds(Set<Id> loanIds) {
@@ -211,6 +232,7 @@ public with sharing class LoanDocumentSelector {
             SELECT Id, Loan__c, Loan_Key__c, Status__c, First_Missing_On__c
             FROM Loan_Document_Case__c
             WHERE Loan__c IN :loanIds
+
         ]) {
             out.put(row.Loan__c, row);
         }
@@ -226,6 +248,7 @@ public with sharing class LoanDocumentSelector {
                    Loan_Document__r.Document_Type__c
             FROM Loan_Document_Audit__c
             WHERE Loan__c = :loanId
+
             ORDER BY Action_On__c DESC
             LIMIT :safeLimit
         ];
