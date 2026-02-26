@@ -365,13 +365,27 @@ export default class LoanDocumentsPanel extends NavigationMixin(LightningElement
     }
 
     get taskSummaryText() {
+        if (this.isOps) {
+            if (this.awaitingApprovalTypes.length > 0) {
+                return `Ops action needed: review ${this.awaitingApprovalTypes.join(', ')}.`;
+            }
+            if (this.missingUploadTypes.length > 0) {
+                return `Waiting for borrower uploads: ${this.missingUploadTypes.join(', ')}.`;
+            }
+            return 'No open review tasks.';
+        }
+
         if (this.missingUploadTypes.length > 0) {
-            return `Borrower action needed: upload ${this.missingUploadTypes.join(', ')}.`;
+            return `Your action needed: upload ${this.missingUploadTypes.join(', ')}.`;
         }
         if (this.awaitingApprovalTypes.length > 0) {
-            return `Ops action needed: review ${this.awaitingApprovalTypes.join(', ')}.`;
+            return `Waiting for ops review: ${this.awaitingApprovalTypes.join(', ')}.`;
         }
         return 'No open document tasks.';
+    }
+
+    get showActivityAuditSection() {
+        return this.isOps || this.isAdmin || this.canSeeAuditTrail;
     }
 
     get showOpsSlaWorkbench() {

@@ -192,56 +192,58 @@
                             </template>
                         </div>
                     </template>
-                    <div class="neo-panel-title">Activity & Audit Trail</div>
-                    <template if:true={hasClarificationHistory}>
-                        <div class="clarification-thread slds-m-bottom_small">
-                            <p class="clarification-thread-title">Clarification Thread</p>
-                            <template for:each={selectedClarificationHistory} for:item="entry">
-                                <article key={entry.id} class="clarification-thread-item">
-                                    <p class="clarification-thread-head">
-                                        <span>{entry.actionLabel}</span>
-                                        <span class="clarification-thread-time">{entry.actionOnLabel}</span>
-                                    </p>
-                                    <p class="clarification-thread-meta">by {entry.actorName}</p>
-                                    <template if:true={entry.details}>
-                                        <p class="clarification-thread-details">{entry.details}</p>
-                                    </template>
-                                </article>
-                            </template>
-                        </div>
-                    </template>
-                    <template if:true={showAuditTimelineToggle}>
-                        <div class="timeline-toggle-row">
-                            <lightning-button variant="base" label={timelineToggleLabel} onclick={toggleTimeline}></lightning-button>
-                        </div>
-                        <template if:false={isTimelineCollapsed}>
-                            <div class="timeline-box">
-                                <template if:true={hasActivityTimeline}>
-                                    <template for:each={shortTimeline} for:item="entry">
-                                        <article key={entry.id} class="timeline-item slds-m-bottom_x-small">
-                                            <p class="timeline-head">
-                                                <span class="timeline-action">{entry.actionLabel}</span>
-                                                <template if:true={entry.documentType}>
-                                                    <span class="timeline-doc-type">{entry.documentType}</span>
-                                                </template>
-                                            </p>
-                                            <p class="timeline-meta">
-                                                {entry.actionOnLabel}
-                                                <span class="slds-m-left_x-small">by {entry.actorName}</span>
-                                            </p>
-                                            <template if:true={entry.summary}>
-                                                <p class="slds-text-body_small slds-text-color_weak">{entry.summary}</p>
-                                            </template>
-                                        </article>
-                                    </template>
-                                </template>
-                                <template if:false={hasActivityTimeline}>
-                                    <p class="slds-text-body_small slds-text-color_weak">No document activity yet.</p>
+                    <template if:true={showActivityAuditSection}>
+                        <div class="neo-panel-title">Activity & Audit Trail</div>
+                        <template if:true={hasClarificationHistory}>
+                            <div class="clarification-thread slds-m-bottom_small">
+                                <p class="clarification-thread-title">Clarification Thread</p>
+                                <template for:each={selectedClarificationHistory} for:item="entry">
+                                    <article key={entry.id} class="clarification-thread-item">
+                                        <p class="clarification-thread-head">
+                                            <span>{entry.actionLabel}</span>
+                                            <span class="clarification-thread-time">{entry.actionOnLabel}</span>
+                                        </p>
+                                        <p class="clarification-thread-meta">by {entry.actorName}</p>
+                                        <template if:true={entry.details}>
+                                            <p class="clarification-thread-details">{entry.details}</p>
+                                        </template>
+                                    </article>
                                 </template>
                             </div>
                         </template>
-                        <template if:true={isTimelineCollapsed}>
-                            <p class="slds-text-body_small slds-text-color_weak">Timeline hidden to keep focus on review actions.</p>
+                        <template if:true={showAuditTimelineToggle}>
+                            <div class="timeline-toggle-row">
+                                <lightning-button variant="base" label={timelineToggleLabel} onclick={toggleTimeline}></lightning-button>
+                            </div>
+                            <template if:false={isTimelineCollapsed}>
+                                <div class="timeline-box">
+                                    <template if:true={hasActivityTimeline}>
+                                        <template for:each={shortTimeline} for:item="entry">
+                                            <article key={entry.id} class="timeline-item slds-m-bottom_x-small">
+                                                <p class="timeline-head">
+                                                    <span class="timeline-action">{entry.actionLabel}</span>
+                                                    <template if:true={entry.documentType}>
+                                                        <span class="timeline-doc-type">{entry.documentType}</span>
+                                                    </template>
+                                                </p>
+                                                <p class="timeline-meta">
+                                                    {entry.actionOnLabel}
+                                                    <span class="slds-m-left_x-small">by {entry.actorName}</span>
+                                                </p>
+                                                <template if:true={entry.summary}>
+                                                    <p class="slds-text-body_small slds-text-color_weak">{entry.summary}</p>
+                                                </template>
+                                            </article>
+                                        </template>
+                                    </template>
+                                    <template if:false={hasActivityTimeline}>
+                                        <p class="slds-text-body_small slds-text-color_weak">No document activity yet.</p>
+                                    </template>
+                                </div>
+                            </template>
+                            <template if:true={isTimelineCollapsed}>
+                                <p class="slds-text-body_small slds-text-color_weak">Timeline hidden to keep focus on review actions.</p>
+                            </template>
                         </template>
                     </template>
                     <div class="neo-task-box">
