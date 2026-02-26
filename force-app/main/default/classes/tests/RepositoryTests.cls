@@ -29,6 +29,12 @@ public class RepositoryTests {
         Loan__c retrievedLoan = loanRepo.findById(testLoan.Id);
         System.assertEquals(testLoan.Id, retrievedLoan.Id);
         System.assertEquals(testLoan.Loan_Type__c, retrievedLoan.Loan_Type__c);
+
+        // Test update path via save
+        retrievedLoan.Interest_Rate__c = 6.5;
+        loanRepo.save(retrievedLoan);
+        Loan__c updatedLoan = loanRepo.findById(testLoan.Id);
+        System.assertEquals(6.5, updatedLoan.Interest_Rate__c);
         
         // Test saveAll
         List<Loan__c> loansToSave = new List<Loan__c>();
@@ -55,6 +61,16 @@ public class RepositoryTests {
         Set<Id> loanIds = new Set<Id>{loan1.Id, loan2.Id};
         List<Loan__c> retrievedLoans = loanRepo.findAllById(loanIds);
         System.assertEquals(2, retrievedLoans.size());
+
+        // Test bulk update path via saveAll
+        for (Loan__c row : retrievedLoans) {
+            row.Interest_Rate__c = 8.0;
+        }
+        loanRepo.saveAll(retrievedLoans);
+        List<Loan__c> updatedLoans = loanRepo.findAllById(loanIds);
+        for (Loan__c row : updatedLoans) {
+            System.assertEquals(8.0, row.Interest_Rate__c);
+        }
         
         // Test findByAccountId
         List<Loan__c> loansByAccount = loanRepo.findByAccountId(testAccount.Id);
@@ -64,6 +80,11 @@ public class RepositoryTests {
         loanRepo.deleteRecord(testLoan);
         Loan__c deletedLoan = loanRepo.findById(testLoan.Id);
         System.assertEquals(null, deletedLoan);
+
+        // Test bulk delete path
+        loanRepo.deleteAll(updatedLoans);
+        List<Loan__c> deletedLoans = loanRepo.findAllById(loanIds);
+        System.assertEquals(0, deletedLoans.size());
     }
     
     @isTest
@@ -99,6 +120,12 @@ public class RepositoryTests {
         Payment_Plan__c retrievedPlan = paymentPlanRepo.findById(testPaymentPlan.Id);
         System.assertEquals(testPaymentPlan.Id, retrievedPlan.Id);
         System.assertEquals(testPaymentPlan.Payment_Status__c, retrievedPlan.Payment_Status__c);
+
+        // Test update path via save
+        retrievedPlan.Payment_Status__c = 'Completed';
+        paymentPlanRepo.save(retrievedPlan);
+        Payment_Plan__c updatedPlan = paymentPlanRepo.findById(testPaymentPlan.Id);
+        System.assertEquals('Completed', updatedPlan.Payment_Status__c);
         
         // Test saveAll
         List<Payment_Plan__c> plansToSave = new List<Payment_Plan__c>();
@@ -123,6 +150,16 @@ public class RepositoryTests {
         Set<Id> planIds = new Set<Id>{plan1.Id, plan2.Id};
         List<Payment_Plan__c> retrievedPlans = paymentPlanRepo.findAllById(planIds);
         System.assertEquals(2, retrievedPlans.size());
+
+        // Test bulk update path via saveAll
+        for (Payment_Plan__c row : retrievedPlans) {
+            row.Payment_Status__c = 'Completed';
+        }
+        paymentPlanRepo.saveAll(retrievedPlans);
+        List<Payment_Plan__c> updatedPlans = paymentPlanRepo.findAllById(planIds);
+        for (Payment_Plan__c row : updatedPlans) {
+            System.assertEquals('Completed', row.Payment_Status__c);
+        }
         
         // Test findByLoanId
         List<Payment_Plan__c> plansByLoan = paymentPlanRepo.findByLoanId(testLoan.Id);
@@ -136,6 +173,11 @@ public class RepositoryTests {
         paymentPlanRepo.deleteRecord(testPaymentPlan);
         Payment_Plan__c deletedPlan = paymentPlanRepo.findById(testPaymentPlan.Id);
         System.assertEquals(null, deletedPlan);
+
+        // Test bulk delete path
+        paymentPlanRepo.deleteAll(updatedPlans);
+        List<Payment_Plan__c> deletedPlans = paymentPlanRepo.findAllById(planIds);
+        System.assertEquals(0, deletedPlans.size());
     }
     
     // LoanService tests removed as service has been refactored into command/query services.

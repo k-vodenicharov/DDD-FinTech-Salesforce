@@ -238,6 +238,7 @@ public with sharing class LoanCommandService {
             SELECT Loan__c loanId, COUNT(Id) cnt
             FROM Payment_Plan__c
             WHERE Loan__c IN :loanIds AND Payment_Status__c = 'Completed'
+            WITH SECURITY_ENFORCED
             GROUP BY Loan__c
         ]) {
             counts.put((Id) ar.get('loanId'), (Integer) ar.get('cnt'));

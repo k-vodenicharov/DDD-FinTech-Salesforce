@@ -9,12 +9,16 @@ public with sharing class LoanRepository implements ILoanRepository {
             if (!Schema.SObjectType.Loan__c.isCreateable()) {
                 throw new SecurityException('Insufficient access to create Loan.');
             }
-            insert loan;
+            List<Loan__c> sanitized = sanitizeCreate(new List<Loan__c>{ loan });
+            if (sanitized.isEmpty()) throw new SecurityException('Insufficient field access to create Loan.');
+            insert sanitized[0];
         } else {
             if (!Schema.SObjectType.Loan__c.isUpdateable()) {
                 throw new SecurityException('Insufficient access to update Loan.');
             }
-            update loan;
+            List<Loan__c> sanitized = sanitizeUpdate(new List<Loan__c>{ loan });
+            if (sanitized.isEmpty()) throw new SecurityException('Insufficient field access to update Loan.');
+            update sanitized[0];
         }
     }
 
@@ -31,13 +35,19 @@ public with sharing class LoanRepository implements ILoanRepository {
             if (!Schema.SObjectType.Loan__c.isCreateable()) {
                 throw new SecurityException('Insufficient access to create Loan.');
             }
-            insert toInsert;
+            List<Loan__c> sanitizedInserts = sanitizeCreate(toInsert);
+            if (!sanitizedInserts.isEmpty()) {
+                insert sanitizedInserts;
+            }
         }
         if (!toUpdate.isEmpty()) {
             if (!Schema.SObjectType.Loan__c.isUpdateable()) {
                 throw new SecurityException('Insufficient access to update Loan.');
             }
-            update toUpdate;
+            List<Loan__c> sanitizedUpdates = sanitizeUpdate(toUpdate);
+            if (!sanitizedUpdates.isEmpty()) {
+                update sanitizedUpdates;
+            }
         }
     }
 
@@ -74,6 +84,30 @@ public with sharing class LoanRepository implements ILoanRepository {
         List<SObject> sobs = new List<SObject>();
         sobs.addAll(loans);
         List<SObject> sanitized = SecurityUtil.stripRead(sobs);
+        List<Loan__c> result = new List<Loan__c>();
+        for (SObject s : sanitized) {
+            result.add((Loan__c) s);
+        }
+        return result;
+    }
+
+    private List<Loan__c> sanitizeCreate(List<Loan__c> loans) {
+        if (loans == null || loans.isEmpty()) return new List<Loan__c>();
+        List<SObject> sobs = new List<SObject>();
+        sobs.addAll(loans);
+        List<SObject> sanitized = SecurityUtil.stripCreate(sobs);
+        List<Loan__c> result = new List<Loan__c>();
+        for (SObject s : sanitized) {
+            result.add((Loan__c) s);
+        }
+        return result;
+    }
+
+    private List<Loan__c> sanitizeUpdate(List<Loan__c> loans) {
+        if (loans == null || loans.isEmpty()) return new List<Loan__c>();
+        List<SObject> sobs = new List<SObject>();
+        sobs.addAll(loans);
+        List<SObject> sanitized = SecurityUtil.stripUpdate(sobs);
         List<Loan__c> result = new List<Loan__c>();
         for (SObject s : sanitized) {
             result.add((Loan__c) s);

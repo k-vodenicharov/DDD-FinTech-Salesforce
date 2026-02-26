@@ -9,12 +9,16 @@ public with sharing class PaymentPlanRepository implements IPaymentPlanRepositor
             if (!Schema.SObjectType.Payment_Plan__c.isCreateable()) {
                 throw new SecurityException('Insufficient access to create Payment Plan.');
             }
-            insert paymentPlan;
+            List<Payment_Plan__c> sanitized = sanitizeCreate(new List<Payment_Plan__c>{ paymentPlan });
+            if (sanitized.isEmpty()) throw new SecurityException('Insufficient field access to create Payment Plan.');
+            insert sanitized[0];
         } else {
             if (!Schema.SObjectType.Payment_Plan__c.isUpdateable()) {
                 throw new SecurityException('Insufficient access to update Payment Plan.');
             }
-            update paymentPlan;
+            List<Payment_Plan__c> sanitized = sanitizeUpdate(new List<Payment_Plan__c>{ paymentPlan });
+            if (sanitized.isEmpty()) throw new SecurityException('Insufficient field access to update Payment Plan.');
+            update sanitized[0];
         }
     }
 
@@ -31,13 +35,19 @@ public with sharing class PaymentPlanRepository implements IPaymentPlanRepositor
             if (!Schema.SObjectType.Payment_Plan__c.isCreateable()) {
                 throw new SecurityException('Insufficient access to create Payment Plan.');
             }
-            insert toInsert;
+            List<Payment_Plan__c> sanitizedInserts = sanitizeCreate(toInsert);
+            if (!sanitizedInserts.isEmpty()) {
+                insert sanitizedInserts;
+            }
         }
         if (!toUpdate.isEmpty()) {
             if (!Schema.SObjectType.Payment_Plan__c.isUpdateable()) {
                 throw new SecurityException('Insufficient access to update Payment Plan.');
             }
-            update toUpdate;
+            List<Payment_Plan__c> sanitizedUpdates = sanitizeUpdate(toUpdate);
+            if (!sanitizedUpdates.isEmpty()) {
+                update sanitizedUpdates;
+            }
         }
     }
 
@@ -87,6 +97,30 @@ public with sharing class PaymentPlanRepository implements IPaymentPlanRepositor
         List<SObject> sobs = new List<SObject>();
         sobs.addAll(plans);
         List<SObject> sanitized = SecurityUtil.stripRead(sobs);
+        List<Payment_Plan__c> result = new List<Payment_Plan__c>();
+        for (SObject s : sanitized) {
+            result.add((Payment_Plan__c) s);
+        }
+        return result;
+    }
+
+    private List<Payment_Plan__c> sanitizeCreate(List<Payment_Plan__c> plans) {
+        if (plans == null || plans.isEmpty()) return new List<Payment_Plan__c>();
+        List<SObject> sobs = new List<SObject>();
+        sobs.addAll(plans);
+        List<SObject> sanitized = SecurityUtil.stripCreate(sobs);
+        List<Payment_Plan__c> result = new List<Payment_Plan__c>();
+        for (SObject s : sanitized) {
+            result.add((Payment_Plan__c) s);
+        }
+        return result;
+    }
+
+    private List<Payment_Plan__c> sanitizeUpdate(List<Payment_Plan__c> plans) {
+        if (plans == null || plans.isEmpty()) return new List<Payment_Plan__c>();
+        List<SObject> sobs = new List<SObject>();
+        sobs.addAll(plans);
+        List<SObject> sanitized = SecurityUtil.stripUpdate(sobs);
         List<Payment_Plan__c> result = new List<Payment_Plan__c>();
         for (SObject s : sanitized) {
             result.add((Payment_Plan__c) s);
