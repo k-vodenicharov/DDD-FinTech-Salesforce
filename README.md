@@ -110,7 +110,7 @@ This repository contains a Salesforce implementation for managing loan applicati
 ### Loan_Document__c Object
 - Loan__c - Lookup(Loan__c)
 - Document_Type__c - Picklist
-- Status__c - Picklist (`Required`, `Uploaded`, `Under_Review`, `Approved`, `Rejected`, `Expired`)
+- Status__c - Picklist (`Required`, `Uploaded`, `Under_Review`, `Needs_Clarification`, `Approved`, `Rejected`, `Expired`)
 - Uploaded_By__c / Uploaded_On__c - Audit of upload
 - Reviewed_By__c / Reviewed_On__c - Ops review audit
 - Rejection_Reason__c / Ops_Comments__c - Ops review notes
@@ -129,6 +129,11 @@ This implementation follows Domain-Driven Design (DDD) principles with the follo
 - **Domain Layer**: Business logic (LoanDomain, PaymentPlanDomain)
 - **Infrastructure Layer**: Jobs, repositories, and triggers
 - **Repository Layer**: Data access (LoanRepository, PaymentPlanRepository)
+
+### Architecture Scope (Intentional)
+- Implemented in this repository: **DDD**, **CQRS**, **Repository**, **Platform Event**, **LDS**, **GraphQL**.
+- Intentionally not implemented: **Factory Pattern**, **Chain of Responsibility**.
+- Event model used: **Platform Event** (`Loan_Event__e`), not Event Sourcing.
 
 ## How to Use the Application
 
@@ -205,6 +210,26 @@ For integrations that prefer async processing, `LoanController.createLoanAsync` 
 **UI API Note:** Ensure UI API GraphQL is enabled in the org (Setup -> GraphQL API).
 
 ## Testing Instructions
+
+### Automated Apex Test Run (Recommended Before Deploy)
+Run all local Apex tests:
+
+```bash
+sf apex run test --target-org <alias> --test-level RunLocalTests --result-format human --code-coverage
+```
+
+Run only the high-impact suites in this repository:
+
+```bash
+sf apex run test --target-org <alias> --tests LoanDocumentationTests,LoanTests,RepositoryTests,PrepayLoanServiceTests,LoanRestructuringTest --result-format human --code-coverage
+```
+
+Equivalent npm shortcuts in this repo:
+
+```bash
+npm run test:apex:local -- --target-org <alias>
+npm run test:apex:core -- --target-org <alias>
+```
 
 ### `Test 1:` Loan Creation with Valid Terms
 1. Navigate to an Account record in Salesforce
@@ -338,9 +363,14 @@ job.execute(null);
 ### `Test 11:` Loan Documentation Upload and Tracking v2
 1. **Setup and access**
    - Create/open a Loan record.
+   - Ensure users can access Apex class `LoanDocumentController` via assigned permission set.
    - Ensure Borrower has `Fin_Tech_User`.
    - Ensure Ops user has both `Fin_Tech_User` and `Loan_Document_Ops`.
+   - Ensure Loan record page activation is correct for profile/permission target (`Loan_Record_Page_Borrower`, `Loan_Record_Page_Ops`, `Loan_Record_Page_Admin`).
    - Open Loan -> `Loan Documentation` tab and confirm `loanDocumentsPanel` renders.
+   - Expected role UI:
+     - Borrower/Admin non-ops: upload/replace path, borrower-focused task text.
+     - Ops: review actions (approve/reject/clarify/scan/authenticity) and SLA Workbench.
 2. **Borrower flow: initial upload**
    - Log in as Borrower.
    - In required list, upload one required document (for example `Government ID`).
@@ -353,9 +383,9 @@ job.execute(null);
 4. **Ops flow: approval gate enforcement**
    - Log in as Ops (`Loan_Document_Ops`).
    - Open same loan/document.
-   - Try approve before scan/authenticity requirements are met and verify approval is blocked.
-   - Set scan to `Clean` only; verify approval still blocked.
-   - Set authenticity to `Verified`; verify approval now succeeds.
+   - Try approve before scan/authenticity requirements are met and verify approval is blocked (`Waiting For Scan` / `Waiting For Authenticity` gate).
+   - Set scan to `Clean` only; verify approval is still blocked.
+   - Set authenticity to `Verified`; verify approval now succeeds (`Ready For Approval` gate).
    - Confirm status becomes `Approved`.
 5. **Ops flow: reject and clarification**
    - Reject another document and verify reason is mandatory and persisted.
@@ -374,6 +404,7 @@ job.execute(null);
    - Verify reminder email path is used (queue members and/or fallback email).
    - Verify exactly one open task exists with subject `Missing required loan documents`.
    - Verify `Alert_Level__c` increments and `Next_Alert_On__c` moves forward.
+   - Verify no duplicate open task is created for the same loan (`Missing required loan documents`).
 9. **Ops SLA Workbench**
    - In ops view, verify workload counters for:
      - `Pending Review`
@@ -440,7 +471,32 @@ Follow these steps after deployment so a fresh org looks like the reference demo
 8. Record page source-of-truth in this repo:
    - Account uses `Account_Record_Page1` (Large and Small form factors).
    - Loan pages (`Loan_Record_Page`, `Loan_Record_Page_Borrower`, `Loan_Record_Page_Ops`, `Loan_Record_Page_Admin`) are included in metadata and should be activated in Lightning App Builder for the target app/profiles.
+   - Activation checklist (Loan, Fin Tech app):
+     - Open `Loan Record Page Borrower` -> `Activation` -> assign to App + Profile for borrower profile (for example `Standard User`).
+     - Open `Loan Record Page Ops` -> `Activation` -> assign to App + Profile for ops profile (for example `Standard Platform User`).
+     - Keep `Loan Record Page` as org default fallback for `Loan__c` record view.
+     - Re-login (or hard refresh) after activation changes so users pick up the correct page assignment.
    - Keep loan operational internals (`Loan Document`, `Loan Document Audit`, `Loan Document Case`) in the `Loan Documentation` tab and ops object tabs, not in the standard Loan `Related` tab.
+
+### Troubleshooting (Common Issues)
+1. Error: `You do not have access to loan document data.`
+   - Confirm user has object read access to `Loan__c` and `Loan_Document__c` (via assigned permission set).
+   - Confirm user has Apex class access to `LoanDocumentController`.
+2. Loan Documentation tab loads but no actions appear for Ops:
+   - Confirm user has `Loan Document Ops` permission set and custom permission `Loan_Document_Ops`.
+   - Re-login or hard-refresh after permission assignment.
+3. Loan Documentation panel does not appear:
+   - Confirm `loanDocumentsPanel` is on the active Loan Lightning Record Page for the user/app/profile.
+4. Wrong Loan record page is shown (Borrower/Ops mix-up):
+   - Open Lightning App Builder and verify `Activation` assignments for:
+     - `Loan Record Page Borrower` (borrower profile in Fin Tech app)
+     - `Loan Record Page Ops` (ops profile in Fin Tech app)
+   - Ensure `Loan Record Page` remains the org default fallback.
+   - Re-login or hard-refresh after activation updates.
+5. Escalation emails/tasks not created:
+   - Confirm labels `Loan_Doc_Alert_Queue_DeveloperName` and `Loan_Doc_Alert_Fallback_Email`.
+   - Confirm queue exists and has members.
+   - Confirm `LoanDocumentEscalationJob` is scheduled.
 
 ### Schedule Payment Reminders (Recommended)
 Scheduling is org-specific, so the recommended approach is to schedule `LoanPaymentReminderJob` after deployment.
@@ -459,5 +515,9 @@ Schedule `LoanDocumentEscalationJob` to enforce the 24h reminder cadence and esc
 String cronDocs = '0 0 9 * * ?';
 System.schedule('Loan Document Escalation Daily 9AM', cronDocs, new LoanDocumentEscalationJob());
 ```
+
+### Legacy Job Note
+`LoanMissingDocumentAlertJob` remains in metadata for backward compatibility with older org setups.
+For v2 behavior, schedule and use `LoanDocumentEscalationJob` only.
 
 ![chatuml-diagram](https://github.com/user-attachments/assets/a622f19b-b968-419a-8efa-d1bfe2512384)
