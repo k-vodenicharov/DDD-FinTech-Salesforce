@@ -29,7 +29,7 @@ global class LoanPaymentReminderJob implements Schedulable {
             SELECT Id, Payment_Deadline__c, Payment_Status__c, Loan__r.Account__r.Id, Loan__r.Principal_Plus_Interest__c
             FROM Payment_Plan__c
             WHERE Payment_Status__c = 'Pending'
-            AND Payment_Deadline__c = :followUpDate
+            AND Payment_Deadline__c <= :followUpDate
             WITH SECURITY_ENFORCED
         ];
         missedPayments = sanitizePayments(missedPayments);

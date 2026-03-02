@@ -6,7 +6,7 @@ This repository contains a Salesforce implementation for managing loan applicati
 
 ### 1. Custom Lightning Component
 - Created a custom Lightning Web Component (LWC) with 4 fields: Loan Type, Loan Amount, Loan Term, Interest Rate
-- Loan Status is system-controlled and automatically set to "Pending" when the Loan record is created; hidden on the Loan layout/edit UI but visible in the Account loans list
+- Loan Status is system-controlled and automatically set to "Pending" when the Loan record is created; visible as read-only on Loan record pages and visible in the Account loans list
 - Save button creates a new loan record with entered values
 - Row-level edit uses LDS (lightning-record-edit-form modal) to update loans
 - Client-side validation enforces maximum loan terms:
@@ -150,7 +150,7 @@ This implementation follows Domain-Driven Design (DDD) principles with the follo
    - Loan Amount: Enter the loan amount
    - Loan Term: Enter the loan term (maximum 6 months for Secured, 12 months for Unsecured)
    - Interest Rate: Enter the annual interest rate
-   - Loan Status: This field is system-controlled and automatically set to "Pending" (hidden on the Loan layout/edit UI but visible in the Account loans list)
+   - Loan Status: This field is system-controlled and automatically set to "Pending" (displayed as read-only on Loan record pages and visible in the Account loans list)
 3. Click the "Create" button
 4. If validation passes, the loan will be created and you'll see a success message with the loan ID
 

@@ -440,6 +440,7 @@ public with sharing class LoanDocumentCommandService {
                    Authenticity_Status__c, Authenticity_Score__c
             FROM Loan_Document__c
             WHERE Id = :loanDocumentId
+            WITH SECURITY_ENFORCED
             LIMIT 1
         ];
         return rows.isEmpty() ? null : rows[0];

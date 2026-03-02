@@ -538,4 +538,51 @@ private class LoanDocumentationTests {
         System.assertEquals(null, completedCase.First_Missing_On__c,
             'First missing timestamp should be cleared when no required docs are missing.');
     }
+
+    @IsTest
+    static void testControllerApproveDeniedForNonOpsUser() {
+        Loan__c loan = createLoan('Loan Controller Access', 'Unsecured', 12000, 'Pending');
+        uploadFile(loan.Id, 'Gov-Controller', 'Government ID');
+        Loan_Document__c doc = [
+            SELECT Id
+            FROM Loan_Document__c
+            WHERE Loan__c = :loan.Id AND Document_Type__c = 'Government ID' AND Is_Latest__c = true
+            LIMIT 1
+        ];
+        User nonOps = createUser('nonopsapprove');
+
+        ResponseWrapper response;
+        System.runAs(nonOps) {
+            response = LoanDocumentController.approveDocument(doc.Id, 'Attempt from non-ops');
+        }
+
+        System.assertEquals(false, response.isSuccess, 'Non-ops user must not be allowed to approve documents.');
+        System.assert(
+            response.errorMessage != null && response.errorMessage.contains('review actions'),
+            'Expected review-actions access error for non-ops user.'
+        );
+    }
+
+    @IsTest
+    static void testControllerPanelReadDeniedWithoutObjectAccess() {
+        Loan__c loan = createLoan('Loan Panel Access', 'Secured', 9000, 'Pending');
+        User restricted = createUser('restrictedpanel');
+
+        Boolean blocked = false;
+        String errorText = '';
+        try {
+            System.runAs(restricted) {
+                LoanDocumentController.getPanelData(loan.Id);
+            }
+        } catch (Exception e) {
+            blocked = true;
+            errorText = e.getMessage();
+        }
+
+        System.assertEquals(true, blocked, 'Expected panel read to be blocked when user lacks object access.');
+        System.assert(
+            String.isBlank(errorText) || errorText.contains('loan document data'),
+            'Expected access-denied message for panel read guard.'
+        );
+    }
 }
